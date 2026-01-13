@@ -45,7 +45,7 @@ fn can_detect_zero_costs_impl(costs: (Float, Float), expected: Option<String>) {
     let problem = Problem {
         fleet: Fleet {
             vehicles: vec![VehicleType {
-                costs: VehicleCosts { fixed: None, distance, time },
+                costs: VehicleCosts { fixed: None, distance, time, span: None },
                 ..create_default_vehicle_type()
             }],
             ..create_default_fleet()

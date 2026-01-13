@@ -234,6 +234,21 @@ pub struct Plan {
 
 // region Fleet
 
+/// Specifies which portion of the route to include in cost calculations.
+#[derive(Clone, Deserialize, Debug, Serialize, Default)]
+#[serde(rename_all = "kebab-case")]
+pub enum RouteCostSpan {
+    /// Full round trip: depot to depot (default).
+    #[default]
+    DepotToDepot,
+    /// Outbound only: depot to last job.
+    DepotToLastJob,
+    /// Return only: first job to depot.
+    FirstJobToDepot,
+    /// Jobs only: first job to last job.
+    FirstJobToLastJob,
+}
+
 /// Specifies vehicle costs.
 #[derive(Clone, Deserialize, Debug, Serialize)]
 pub struct VehicleCosts {
@@ -246,6 +261,11 @@ pub struct VehicleCosts {
 
     /// Cost per time unit.
     pub time: Float,
+
+    /// Specifies which portion of the route to include in cost calculations.
+    /// Defaults to depot-to-depot for full round trip costs.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub span: Option<RouteCostSpan>,
 }
 
 /// Specifies vehicle shift start.

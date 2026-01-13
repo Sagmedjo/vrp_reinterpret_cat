@@ -32,7 +32,7 @@ pub fn create_test_vehicle_type() -> VehicleType {
         type_id: "vehicle".to_string(),
         vehicle_ids: vec!["vehicle_1".to_string()],
         profile: VehicleProfile { matrix: "car".to_string(), scale: None },
-        costs: VehicleCosts { fixed: None, distance: 1., time: 0. },
+        costs: VehicleCosts { fixed: None, distance: 1., time: 0., span: None },
         shifts: vec![VehicleShift {
             start: ShiftStart {
                 earliest: "2020-05-01T09:00:00.00Z".to_string(),

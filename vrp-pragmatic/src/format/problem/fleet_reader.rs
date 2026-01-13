@@ -11,6 +11,7 @@ use std::collections::HashSet;
 use vrp_core::construction::enablers::create_typed_actor_groups;
 use vrp_core::construction::features::{VehicleCapacityDimension, VehicleSkillsDimension};
 use vrp_core::models::common::*;
+use vrp_core::models::problem::RouteCostSpanDimension;
 use vrp_core::models::problem::*;
 
 pub(super) fn get_profile_index_map(api_problem: &ApiProblem) -> HashMap<String, usize> {
@@ -163,6 +164,24 @@ pub(super) fn read_fleet(api_problem: &ApiProblem, props: &ProblemProperties, co
 
                 if let Some(skills) = vehicle.skills.as_ref() {
                     dimens.set_vehicle_skills(skills.iter().cloned().collect::<HashSet<_>>());
+                }
+
+                if let Some(span) = vehicle.costs.span.as_ref() {
+                    let core_span = match span {
+                        crate::format::problem::model::RouteCostSpan::DepotToDepot => {
+                            vrp_core::models::problem::RouteCostSpan::DepotToDepot
+                        }
+                        crate::format::problem::model::RouteCostSpan::DepotToLastJob => {
+                            vrp_core::models::problem::RouteCostSpan::DepotToLastJob
+                        }
+                        crate::format::problem::model::RouteCostSpan::FirstJobToDepot => {
+                            vrp_core::models::problem::RouteCostSpan::FirstJobToDepot
+                        }
+                        crate::format::problem::model::RouteCostSpan::FirstJobToLastJob => {
+                            vrp_core::models::problem::RouteCostSpan::FirstJobToLastJob
+                        }
+                    };
+                    dimens.set_route_cost_span(core_span);
                 }
 
                 vehicles.push(Arc::new(Vehicle {

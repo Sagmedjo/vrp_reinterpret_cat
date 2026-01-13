@@ -665,7 +665,7 @@ mod tests {
                     type_id: "vehicle_type".to_string(),
                     vehicle_ids: vec!["vehicle_1".to_string()],
                     profile: VehicleProfile { matrix: "car".to_string(), scale: None },
-                    costs: VehicleCosts { fixed: Some(0.), distance: 1., time: 1. },
+                    costs: VehicleCosts { fixed: Some(0.), distance: 1., time: 1., span: None },
                     shifts: vec![VehicleShift {
                         start: ShiftStart {
                             earliest: "1970-01-01T00:00:00Z".to_string(),

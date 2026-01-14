@@ -17,6 +17,7 @@ fn can_handle_two_pd_jobs_with_same_locations_and_unusual_routing() {
         demand: Some(vec![1]),
         order: None,
         due_date: None,
+        target_nearest_distance: None,
     };
 
     let problem = Problem {

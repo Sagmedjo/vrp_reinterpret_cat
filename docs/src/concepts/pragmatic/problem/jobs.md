@@ -34,6 +34,11 @@ defined. Each task has the following properties:
 - **order** (optional): a job task assignment order which makes preferable to serve some jobs before others in the tour.
   The order property is represented as integer greater than 1, where the lower value means higher priority. By default
   its value is set to maximum.
+- **dueDate** (optional): a due date for the job task, used with `minimize-overdue` objective. If the job is scheduled
+  after this date, an overdue penalty is applied.
+- **targetNearestDistance** (optional): a target nearest distance threshold for the job task, used with `minimize-nearest-distance`
+  objective. If the job's distance to its nearest neighbor on the same route exceeds this threshold, a penalty is applied.
+  This is useful for ensuring certain jobs are grouped with geographically nearby jobs to optimize route compactness.
 
 ## Places
 

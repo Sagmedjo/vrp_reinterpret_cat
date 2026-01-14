@@ -1,5 +1,5 @@
 use crate::format::coord_index::CoordIndex;
-use crate::format::dimensions::JobDueDateDimension;
+use crate::format::dimensions::{JobDueDateDimension, JobTargetNearestDistanceDimension};
 use crate::format::problem::JobSkills as ApiJobSkills;
 use crate::format::problem::*;
 use crate::format::{JobIndex, Location};
@@ -136,7 +136,7 @@ fn read_required_jobs(
             .map(|p| (Some(p.location.clone()), p.duration, parse_times(&p.times), p.tag.clone()))
             .collect();
 
-        get_single_with_dimens(places, demand, &task.order, &task.due_date, activity_type, has_multi_dimens, coord_index)
+        get_single_with_dimens(places, demand, &task.order, &task.due_date, &task.target_nearest_distance, activity_type, has_multi_dimens, coord_index)
     };
 
     api_problem.plan.jobs.iter().for_each(|job| {
@@ -389,6 +389,7 @@ fn get_single_with_dimens(
     demand: Demand<MultiDimLoad>,
     order: &Option<i32>,
     due_date: &Option<String>,
+    target_nearest_distance: &Option<Float>,
     activity_type: &str,
     has_multi_dimens: bool,
     coord_index: &CoordIndex,
@@ -412,6 +413,10 @@ fn get_single_with_dimens(
 
     if let Some(due_date) = due_date {
         dimens.set_job_due_date(parse_time(due_date));
+    }
+
+    if let Some(target_nearest_distance) = target_nearest_distance {
+        dimens.set_job_target_nearest_distance(*target_nearest_distance);
     }
 
     single

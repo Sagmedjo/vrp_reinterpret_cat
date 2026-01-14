@@ -80,7 +80,8 @@ fn can_read_complex_problem() {
                         }],
                         demand: Some(vec![0, 1]),
                         order: None,
-                            due_date: None,
+                        due_date: None,
+                        target_nearest_distance: None,
                     }]),
                     skills: Some(all_of_skills(vec!["unique".to_string()])),
                     ..create_job("delivery_job")
@@ -98,7 +99,8 @@ fn can_read_complex_problem() {
                         }],
                         demand: Some(vec![2]),
                         order: None,
-                            due_date: None,
+                        due_date: None,
+                        target_nearest_distance: None,
                     }]),
                     deliveries: Some(vec![JobTask {
                         places: vec![JobPlace {
@@ -112,7 +114,8 @@ fn can_read_complex_problem() {
                         }],
                         demand: Some(vec![2]),
                         order: None,
-                            due_date: None,
+                        due_date: None,
+                        target_nearest_distance: None,
                     }]),
                     ..create_job("pickup_delivery_job")
                 },
@@ -129,7 +132,8 @@ fn can_read_complex_problem() {
                         }],
                         demand: Some(vec![3]),
                         order: None,
-                            due_date: None,
+                        due_date: None,
+                        target_nearest_distance: None,
                     }]),
                     skills: Some(all_of_skills(vec!["unique2".to_string()])),
                     ..create_job("pickup_job")

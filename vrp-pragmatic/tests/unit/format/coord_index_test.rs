@@ -20,7 +20,8 @@ fn can_use_index_with_coordinate_an_unknown_location_types() {
                         }],
                         demand: None,
                         order: None,
-                            due_date: None,
+                        due_date: None,
+                        target_nearest_distance: None,
                     }]),
                     ..create_job("job3")
                 },

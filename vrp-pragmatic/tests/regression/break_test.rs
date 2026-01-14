@@ -26,6 +26,7 @@ fn can_handle_properly_invalid_break_removal() {
                             demand: Some(vec![1]),
                             order: None,
                             due_date: None,
+                            target_nearest_distance: None,
                         }]),
                         ..create_job("job1")
                     },
@@ -43,6 +44,7 @@ fn can_handle_properly_invalid_break_removal() {
                             demand: Some(vec![1]),
                             order: None,
                             due_date: None,
+                            target_nearest_distance: None,
                         }]),
                         ..create_job("job2")
                     },
@@ -60,6 +62,7 @@ fn can_handle_properly_invalid_break_removal() {
                             demand: Some(vec![1]),
                             order: None,
                             due_date: None,
+                            target_nearest_distance: None,
                         }]),
                         ..create_job("job3")
                     },
@@ -77,6 +80,7 @@ fn can_handle_properly_invalid_break_removal() {
                             demand: Some(vec![2]),
                             order: None,
                             due_date: None,
+                            target_nearest_distance: None,
                         }]),
                         ..create_job("job4")
                     },
@@ -94,6 +98,7 @@ fn can_handle_properly_invalid_break_removal() {
                             demand: Some(vec![3]),
                             order: None,
                             due_date: None,
+                            target_nearest_distance: None,
                         }]),
                         ..create_job("job5")
                     },
@@ -111,6 +116,7 @@ fn can_handle_properly_invalid_break_removal() {
                             demand: Some(vec![1]),
                             order: None,
                             due_date: None,
+                            target_nearest_distance: None,
                         }]),
                         ..create_job("job6")
                     },

@@ -83,6 +83,10 @@ pub struct JobTask {
     /// A due date for the task in RFC3339 format. Used for minimize-overdue objective.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub due_date: Option<String>,
+    /// Target nearest distance threshold. If the job's distance to the nearest
+    /// route appointment exceeds this, a penalty is applied. Used for minimize-nearest-distance objective.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub target_nearest_distance: Option<Float>,
 }
 
 /// A customer job model. Actual tasks of the job specified by list of pickups and deliveries
@@ -644,6 +648,10 @@ pub enum Objective {
 
     /// An objective to minimize total overdue days for scheduled jobs.
     MinimizeOverdue,
+
+    /// An objective to minimize nearest distance violations for job tasks.
+    /// Jobs define their own target_nearest_distance threshold in their dimensions.
+    MinimizeNearestDistance,
 
     /// An objective to consider hierarchy of areas while serving jobs.
     HierarchicalAreas {

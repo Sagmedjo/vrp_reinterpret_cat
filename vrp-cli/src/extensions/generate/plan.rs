@@ -47,6 +47,7 @@ pub(crate) fn generate_plan(
                     },
                     order: task.order,
                     due_date: task.due_date.clone(),
+                    target_nearest_distance: task.target_nearest_distance,
                 })
                 .collect::<Vec<_>>()
         })

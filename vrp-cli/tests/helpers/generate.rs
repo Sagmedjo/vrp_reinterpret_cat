@@ -43,6 +43,7 @@ pub fn create_test_vehicle_type() -> VehicleType {
             breaks: None,
             reloads: None,
             recharges: None,
+                        job_times: None,
         }],
         capacity: vec![10],
         skills: None,

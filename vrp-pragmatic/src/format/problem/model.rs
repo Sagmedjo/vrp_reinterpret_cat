@@ -303,8 +303,22 @@ pub struct ShiftEnd {
     pub location: Location,
 }
 
+/// Time constraints for jobs within a shift.
+/// Controls when the first job can start and when the last job must finish.
+#[derive(Clone, Deserialize, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct JobTimeConstraints {
+    /// Earliest allowed arrival at first job (RFC3339 format).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub earliest_first: Option<String>,
+    /// Latest allowed departure from last job (RFC3339 format).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub latest_last: Option<String>,
+}
+
 /// Specifies vehicle shift.
 #[derive(Clone, Deserialize, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct VehicleShift {
     /// Vehicle shift start.
     pub start: ShiftStart,
@@ -325,6 +339,10 @@ pub struct VehicleShift {
     /// Vehicle recharge stations information.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub recharges: Option<VehicleRecharges>,
+
+    /// Time constraints for the first and last jobs in this shift.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub job_times: Option<JobTimeConstraints>,
 }
 
 /// Specifies a place where vehicle can load or unload cargo.

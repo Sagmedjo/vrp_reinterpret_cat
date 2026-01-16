@@ -184,6 +184,14 @@ pub(super) fn read_fleet(api_problem: &ApiProblem, props: &ProblemProperties, co
                     dimens.set_route_cost_span(core_span);
                 }
 
+                if let Some(job_times) = shift.job_times.as_ref() {
+                    let core_job_times = vrp_core::models::problem::JobTimeConstraints {
+                        earliest_first: job_times.earliest_first.as_ref().map(|t| parse_time(t)),
+                        latest_last: job_times.latest_last.as_ref().map(|t| parse_time(t)),
+                    };
+                    dimens.set_job_time_constraints(core_job_times);
+                }
+
                 vehicles.push(Arc::new(Vehicle {
                     profile: profile.clone(),
                     costs: costs.clone(),

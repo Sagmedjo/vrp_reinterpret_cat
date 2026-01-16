@@ -158,6 +158,12 @@ fn get_problem_properties(api_problem: &ApiProblem, matrices: &[Matrix]) -> Prob
 
     let has_min_vehicle_shifts = api_problem.fleet.vehicles.iter().any(|vehicle| vehicle.min_shifts.is_some());
 
+    let has_job_time_constraints = api_problem
+        .fleet
+        .vehicles
+        .iter()
+        .any(|v| v.shifts.iter().any(|s| s.job_times.is_some()));
+
     ProblemProperties {
         has_multi_dimen_capacity,
         has_breaks,
@@ -171,6 +177,7 @@ fn get_problem_properties(api_problem: &ApiProblem, matrices: &[Matrix]) -> Prob
         has_compatibility,
         has_tour_size_limits,
         has_tour_travel_limits,
+        has_job_time_constraints,
         has_min_vehicle_shifts,
     }
 }

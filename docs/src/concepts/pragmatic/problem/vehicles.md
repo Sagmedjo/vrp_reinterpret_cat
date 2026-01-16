@@ -120,6 +120,28 @@ Each shift can have the following properties:
 - **recharges** (optional, experimental) specifies recharging stations and max distance limit before recharge should happen.
   See examples [here](../../../examples/pragmatic/basics/recharge.md).
 
+- **jobTimes** (optional) specifies time constraints for when jobs can be served during this shift. This is useful for
+  scenarios where vehicles should only serve customers during specific time windows (e.g., business hours only).
+  It has two optional properties:
+  - **earliestFirst**: the earliest time the vehicle can arrive at its first job. If the vehicle would arrive earlier,
+    it must wait until this time before starting service. Jobs whose time windows end before this time cannot be assigned.
+  - **latestLast**: the latest time the vehicle can depart from its last job. Jobs that would require departing after
+    this time cannot be assigned.
+
+  ```json
+  "jobTimes": {
+    "earliestFirst": "2019-07-04T09:00:00Z",
+    "latestLast": "2019-07-04T17:00:00Z"
+  }
+  ```
+
+  This feature is useful for:
+  - Enforcing business hours: ensuring all customer service happens within working hours
+  - Compliance requirements: meeting regulatory constraints on service times
+  - Resource scheduling: coordinating with external systems that have time-based availability
+
+  See examples [here](../../../examples/pragmatic/basics/job-times.md).
+
 ## Related errors
 
 - [E1300 duplicated vehicle type ids](../errors/index.md#e1300)

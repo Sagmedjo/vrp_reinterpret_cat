@@ -111,6 +111,7 @@ prop_compose! {
           breaks,
           reloads,
           recharges,
+          job_times: None,
         }
     }
 }

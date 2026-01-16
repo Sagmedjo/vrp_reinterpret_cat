@@ -99,6 +99,7 @@ mod single {
                             ..create_default_reload()
                         }]),
                         recharges: None,
+                        job_times: None,
                     }],
                     capacity: vec![5],
                     skills: None,

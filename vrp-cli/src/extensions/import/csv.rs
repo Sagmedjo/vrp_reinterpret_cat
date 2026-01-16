@@ -127,6 +127,7 @@ mod actual {
                         breaks: None,
                         reloads: None,
                         recharges: None,
+                        job_times: None,
                     }],
                     capacity: vec![vehicle.capacity],
                     skills: None,

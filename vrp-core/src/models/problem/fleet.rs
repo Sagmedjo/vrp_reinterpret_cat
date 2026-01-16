@@ -28,6 +28,18 @@ pub enum RouteCostSpan {
 
 custom_dimension!(pub RouteCostSpan typeof RouteCostSpan);
 
+/// Time constraints for jobs within a shift.
+/// Controls when the first job can start and when the last job must finish.
+#[derive(Clone, Copy, Debug, Default)]
+pub struct JobTimeConstraints {
+    /// Earliest allowed arrival time at the first job.
+    pub earliest_first: Option<Timestamp>,
+    /// Latest allowed departure time from the last job.
+    pub latest_last: Option<Timestamp>,
+}
+
+custom_dimension!(pub JobTimeConstraints typeof JobTimeConstraints);
+
 /// Represents operating costs for driver and vehicle.
 #[derive(Clone, Debug)]
 pub struct Costs {

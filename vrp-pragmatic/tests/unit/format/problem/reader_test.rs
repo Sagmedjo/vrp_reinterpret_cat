@@ -172,6 +172,7 @@ fn can_read_complex_problem() {
                     }]),
                     reloads: None,
                     recharges: None,
+                        job_times: None,
                 }],
                 capacity: vec![10, 1],
                 skills: Some(vec!["unique1".to_string(), "unique2".to_string()]),

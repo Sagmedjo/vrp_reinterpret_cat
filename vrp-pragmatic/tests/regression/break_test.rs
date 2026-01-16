@@ -150,6 +150,7 @@ fn can_handle_properly_invalid_break_removal() {
                         }]),
                         reloads: None,
                         recharges: None,
+                        job_times: None,
                     }],
                     capacity: vec![5],
                     skills: None,

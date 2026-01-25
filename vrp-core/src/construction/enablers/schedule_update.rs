@@ -8,6 +8,7 @@ use crate::models::common::{Distance, Duration, Schedule, TimeSpan, Timestamp};
 use crate::models::problem::{ActivityCost, RouteCostSpan, RouteCostSpanDimension, TransportCost, TravelTime};
 use crate::models::solution::{Activity, Route};
 use rosomaxa::prelude::Float;
+use rosomaxa::utils::UnwrapValue;
 
 custom_activity_state!(pub(crate) LatestArrival typeof Timestamp);
 custom_activity_state!(pub(crate) WaitingTime typeof Timestamp);
@@ -80,7 +81,7 @@ fn update_schedules(route_ctx: &mut RouteContext, activity: &dyn ActivityCost, t
             let a = route_ctx.route().tour.get(activity_idx).unwrap();
             let location = a.place.location;
             let arrival = dep + transport.duration(route_ctx.route(), loc, location, TravelTime::Departure(dep));
-            let departure = activity.estimate_departure(route_ctx.route(), a, arrival);
+            let departure = activity.estimate_departure(route_ctx.route(), a, arrival).unwrap_value();
 
             (location, arrival, departure)
         };
@@ -122,7 +123,7 @@ fn update_states(route_ctx: &mut RouteContext, activity: &dyn ActivityCost, tran
         } else {
             let latest_departure =
                 end_time - transport.duration(route, act.place.location, prev_loc, TravelTime::Arrival(end_time));
-            activity.estimate_arrival(route, act, latest_departure)
+            activity.estimate_arrival(route, act, latest_departure).unwrap_value()
         };
         let future_waiting = waiting + (act.place.time.start - act.schedule.arrival).max(0.);
 

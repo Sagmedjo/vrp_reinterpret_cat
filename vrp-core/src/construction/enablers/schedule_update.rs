@@ -39,6 +39,15 @@ pub fn update_route_departure(
     }
 
     recompute_offset_time_windows(route_ctx, old_departure_time, new_departure_time);
+    let start = route_ctx.route().tour.get(0).unwrap();
+    let old_departure_time = start.schedule.departure;
+
+    {
+        let start = route_ctx.route_mut().tour.get_mut(0).unwrap();
+        start.schedule.departure = new_departure_time;
+    }
+
+    recompute_offset_time_windows(route_ctx, old_departure_time, new_departure_time);
 
     update_route_schedule(route_ctx, activity, transport);
 }
@@ -153,13 +162,7 @@ fn update_statistics(route_ctx: &mut RouteContext, transport: &dyn TransportCost
     let end = route.tour.end().unwrap();
     let total_activities = route.tour.total();
 
-    let cost_span = route
-        .actor
-        .vehicle
-        .dimens
-        .get_route_cost_span()
-        .copied()
-        .unwrap_or_default();
+    let cost_span = route.actor.vehicle.dimens.get_route_cost_span().copied().unwrap_or_default();
 
     let total_dur = calculate_route_duration(route, cost_span, total_activities, start, end);
     let total_dist = calculate_route_distance(route, transport, cost_span, total_activities);
@@ -182,11 +185,7 @@ fn get_last_job_idx(route: &Route, total_activities: usize) -> Option<usize> {
 
     if has_end_depot {
         // Closed tour: [start, job1, ..., jobN, end] - last job at total - 2
-        if total_activities > 2 {
-            Some(total_activities - 2)
-        } else {
-            None
-        }
+        if total_activities > 2 { Some(total_activities - 2) } else { None }
     } else {
         // Open tour: [start, job1, ..., jobN] - last job at total - 1
         Some(total_activities - 1)
@@ -200,11 +199,7 @@ fn has_jobs(route: &Route, total_activities: usize) -> bool {
     let end = route.tour.end();
     let has_end_depot = end.is_some_and(|e| e.job.is_none());
 
-    if has_end_depot {
-        total_activities > 2
-    } else {
-        total_activities > 1
-    }
+    if has_end_depot { total_activities > 2 } else { total_activities > 1 }
 }
 
 fn calculate_route_duration(
@@ -255,6 +250,8 @@ fn calculate_route_distance(
     total_activities: usize,
 ) -> Distance {
     let last_job_idx = get_last_job_idx(route, total_activities);
+
+    let cost_span = RouteCostSpan::DepotToDepot;
 
     let (start_idx, end_idx) = match cost_span {
         RouteCostSpan::DepotToDepot => (0, total_activities),

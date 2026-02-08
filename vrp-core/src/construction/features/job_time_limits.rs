@@ -104,7 +104,12 @@ impl JobTimeLimitsConstraint {
 
                 // Respect the job's time window (might need to wait)
                 let service_start = actual_arr_time.max(target.place.time.start);
-                let departure_from_target = self.activity.estimate_departure(route, target, service_start);
+                let departure_result = self.activity.estimate_departure(route, target, service_start);
+
+                // Extract departure time from ControlFlow (use the value regardless of Continue/Break)
+                let departure_from_target = match departure_result {
+                    std::ops::ControlFlow::Continue(t) | std::ops::ControlFlow::Break(t) => t,
+                };
 
                 if departure_from_target > latest_last {
                     return ConstraintViolation::skip(self.violation_code);

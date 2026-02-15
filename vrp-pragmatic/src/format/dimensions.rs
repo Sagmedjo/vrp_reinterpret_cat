@@ -21,8 +21,6 @@ custom_dimension!(pub JobValue typeof Float);
 
 custom_dimension!(pub JobDueDate typeof Float);
 
-custom_dimension!(pub JobTargetNearestDistance typeof Float);
-
 custom_dimension!(pub JobType typeof String);
 
 custom_dimension!(pub BreakPolicy typeof BreakPolicy);

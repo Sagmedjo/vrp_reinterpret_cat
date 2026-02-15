@@ -39,15 +39,6 @@ pub fn update_route_departure(
     }
 
     recompute_offset_time_windows(route_ctx, old_departure_time, new_departure_time);
-    let start = route_ctx.route().tour.get(0).unwrap();
-    let old_departure_time = start.schedule.departure;
-
-    {
-        let start = route_ctx.route_mut().tour.get_mut(0).unwrap();
-        start.schedule.departure = new_departure_time;
-    }
-
-    recompute_offset_time_windows(route_ctx, old_departure_time, new_departure_time);
 
     update_route_schedule(route_ctx, activity, transport);
 }
@@ -250,8 +241,6 @@ fn calculate_route_distance(
     total_activities: usize,
 ) -> Distance {
     let last_job_idx = get_last_job_idx(route, total_activities);
-
-    let cost_span = RouteCostSpan::DepotToDepot;
 
     let (start_idx, end_idx) = match cost_span {
         RouteCostSpan::DepotToDepot => (0, total_activities),

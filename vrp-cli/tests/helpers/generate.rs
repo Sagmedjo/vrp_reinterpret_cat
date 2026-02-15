@@ -16,7 +16,7 @@ pub fn create_empty_job() -> Job {
 }
 
 pub fn create_empty_job_task() -> JobTask {
-    JobTask { places: vec![], demand: None, order: None, due_date: None, target_nearest_distance: None }
+    JobTask { places: vec![], demand: None, order: None, due_date: None }
 }
 
 pub fn create_empty_job_place() -> JobPlace {

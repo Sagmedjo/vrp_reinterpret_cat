@@ -43,11 +43,10 @@ Besides cost objectives, there are other objectives which are targeting for some
   difference between the scheduled date (route start time) and the job's due date. Jobs scheduled before their
   due date have zero overdue. Unassigned jobs with due dates are heavily penalized (10000) to strongly encourage
   their assignment.
-- `minimize-nearest-distance`: minimizes nearest distance violations for job tasks. Jobs can define a
-  `target_nearest_distance` threshold in their task definition. If a job's distance to its nearest neighbor on the
-  same route exceeds this threshold, a penalty is applied equal to the excess distance. This objective
-  encourages geographically compact routes where jobs with distance constraints are grouped with nearby jobs.
-  Jobs without `target_nearest_distance` defined are not penalized.
+- `minimize-vehicle-distance`: penalizes assigning jobs to vehicles that are farther away than the nearest
+  compatible vehicle. For each job, the penalty is the excess distance from the job to its assigned vehicle's
+  start location compared to the nearest compatible vehicle's start location. Compatibility is determined by
+  skills and profile matching. This objective encourages jobs to be served by the closest suitable vehicle.
 - `fast-service`: prefers solutions when jobs are served early in tours. Optional parameter:
   - `tolerance`: an objective tolerance specifies how different objective values have to be to consider them different.
     Relative distance metric is used.

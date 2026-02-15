@@ -250,17 +250,17 @@ fn get_objective_feature_layer(
                 if has_due_date { 10000.0 } else { 0.0 }
             })
             .build(),
-        Objective::MinimizeNearestDistance => NearestDistanceFeatureBuilder::new("min_nearest_distance")
+        Objective::MinimizeVehicleDistance => VehicleDistanceFeatureBuilder::new("min_vehicle_distance")
             .set_transport(blocks.transport.clone())
-            .set_job_target_fn(|job| {
-                match job {
-                    CoreJob::Single(single) => single.dimens.get_job_target_nearest_distance().copied(),
-                    CoreJob::Multi(multi) => multi
-                        .jobs
-                        .iter()
-                        .filter_map(|s| s.dimens.get_job_target_nearest_distance().copied())
-                        .min_by(|a, b| a.total_cmp(b)),
+            .set_actors(blocks.fleet.actors.clone())
+            .set_compatibility_fn(|job, actor| {
+                if let Some(job_skills) = job.dimens().get_job_skills() {
+                    let vehicle_skills = actor.vehicle.dimens.get_vehicle_skills();
+                    if !is_job_skills_compatible(job_skills, &vehicle_skills) {
+                        return false;
+                    }
                 }
+                true
             })
             .build(),
         Objective::HierarchicalAreas { levels } => get_hierarchical_areas_feature(blocks, *levels),

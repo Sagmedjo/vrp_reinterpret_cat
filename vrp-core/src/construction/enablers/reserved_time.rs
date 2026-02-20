@@ -224,9 +224,10 @@ pub(crate) fn create_reserved_times_fn(
             let offset = get_offset_anchor(route);
 
             // Search window group with absolute time
-            let window_result = partitioned.window_group.as_ref().and_then(|(indices, intervals)| {
-                search_group(indices, intervals, time_window.start, time_window.end)
-            });
+            let window_result = partitioned
+                .window_group
+                .as_ref()
+                .and_then(|(indices, intervals)| search_group(indices, intervals, time_window.start, time_window.end));
 
             // Search offset group with offset-relative time
             let offset_result = partitioned.offset_group.as_ref().and_then(|(indices, intervals)| {
@@ -314,6 +315,8 @@ fn search_group<'a>(
 
     match indices.binary_search(&(interval_start as u64)) {
         Ok(idx) => intervals.get(idx).filter(|reserved_time| has_intersection(reserved_time)),
-        Err(idx) => (idx.max(1) - 1..=idx).filter_map(|idx| intervals.get(idx)).find(|reserved_time| has_intersection(reserved_time)),
+        Err(idx) => (idx.max(1) - 1..=idx)
+            .filter_map(|idx| intervals.get(idx))
+            .find(|reserved_time| has_intersection(reserved_time)),
     }
 }

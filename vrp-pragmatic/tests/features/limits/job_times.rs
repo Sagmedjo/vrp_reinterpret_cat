@@ -3,10 +3,7 @@ use crate::format::solution::*;
 use crate::format_time;
 use crate::helpers::*;
 
-fn create_vehicle_with_job_time_constraints(
-    earliest_first: Option<f64>,
-    latest_last: Option<f64>,
-) -> VehicleType {
+fn create_vehicle_with_job_time_constraints(earliest_first: Option<f64>, latest_last: Option<f64>) -> VehicleType {
     create_named_vehicle_with_job_time_constraints("my_vehicle", earliest_first, latest_last)
 }
 
@@ -19,16 +16,8 @@ fn create_named_vehicle_with_job_time_constraints(
         type_id: type_id.to_string(),
         vehicle_ids: vec![format!("{}_1", type_id)],
         shifts: vec![VehicleShift {
-            start: ShiftStart {
-                earliest: format_time(0.),
-                latest: None,
-                location: (0., 0.).to_loc(),
-            },
-            end: Some(ShiftEnd {
-                earliest: None,
-                latest: format_time(1000.),
-                location: (0., 0.).to_loc(),
-            }),
+            start: ShiftStart { earliest: format_time(0.), latest: None, location: (0., 0.).to_loc() },
+            end: Some(ShiftEnd { earliest: None, latest: format_time(1000.), location: (0., 0.).to_loc() }),
             breaks: None,
             reloads: None,
             recharges: None,
@@ -47,11 +36,7 @@ fn create_open_route_vehicle_with_job_time_constraints(
 ) -> VehicleType {
     VehicleType {
         shifts: vec![VehicleShift {
-            start: ShiftStart {
-                earliest: format_time(0.),
-                latest: None,
-                location: (0., 0.).to_loc(),
-            },
+            start: ShiftStart { earliest: format_time(0.), latest: None, location: (0., 0.).to_loc() },
             end: None, // Open route - no return to depot
             breaks: None,
             reloads: None,
@@ -124,9 +109,7 @@ fn can_assign_job_when_arrival_after_earliest_first() {
     assert!(solution.unassigned.is_none(), "Job should be assigned");
     assert_eq!(solution.tours.len(), 1);
     assert!(
-        solution.tours[0].stops.iter().any(|stop| {
-            stop.activities().iter().any(|a| a.job_id == "job1")
-        }),
+        solution.tours[0].stops.iter().any(|stop| { stop.activities().iter().any(|a| a.job_id == "job1") }),
         "Tour should contain job1"
     );
 }
@@ -157,9 +140,7 @@ fn can_assign_job_when_time_window_allows_waiting() {
     assert!(solution.unassigned.is_none(), "Job should be assigned because TW allows waiting");
     assert_eq!(solution.tours.len(), 1);
     assert!(
-        solution.tours[0].stops.iter().any(|stop| {
-            stop.activities().iter().any(|a| a.job_id == "job1")
-        }),
+        solution.tours[0].stops.iter().any(|stop| { stop.activities().iter().any(|a| a.job_id == "job1") }),
         "Tour should contain job1"
     );
 }
@@ -224,9 +205,7 @@ fn can_assign_job_when_departure_before_latest_last() {
     assert!(solution.unassigned.is_none(), "Job should be assigned");
     assert_eq!(solution.tours.len(), 1);
     assert!(
-        solution.tours[0].stops.iter().any(|stop| {
-            stop.activities().iter().any(|a| a.job_id == "job1")
-        }),
+        solution.tours[0].stops.iter().any(|stop| { stop.activities().iter().any(|a| a.job_id == "job1") }),
         "Tour should contain job1"
     );
 }
@@ -313,23 +292,13 @@ fn can_handle_multiple_jobs_with_constraints() {
 
     // job3 should be unassigned
     assert!(solution.unassigned.is_some(), "Should have unassigned jobs");
-    let unassigned_ids: Vec<_> = solution
-        .unassigned
-        .as_ref()
-        .unwrap()
-        .iter()
-        .map(|u| u.job_id.as_str())
-        .collect();
+    let unassigned_ids: Vec<_> = solution.unassigned.as_ref().unwrap().iter().map(|u| u.job_id.as_str()).collect();
     assert!(unassigned_ids.contains(&"job3"), "job3 should be unassigned");
 
     // job1 and job2 should be assigned
     assert_eq!(solution.tours.len(), 1);
-    let assigned_jobs: Vec<_> = solution.tours[0]
-        .stops
-        .iter()
-        .flat_map(|stop| stop.activities().iter())
-        .map(|a| a.job_id.as_str())
-        .collect();
+    let assigned_jobs: Vec<_> =
+        solution.tours[0].stops.iter().flat_map(|stop| stop.activities().iter()).map(|a| a.job_id.as_str()).collect();
     assert!(assigned_jobs.contains(&"job1"), "job1 should be assigned");
     assert!(assigned_jobs.contains(&"job2"), "job2 should be assigned");
 }
@@ -375,23 +344,12 @@ fn can_work_with_depot_to_depot_span() {
         fleet: Fleet {
             vehicles: vec![VehicleType {
                 shifts: vec![VehicleShift {
-                    start: ShiftStart {
-                        earliest: format_time(0.),
-                        latest: None,
-                        location: (0., 0.).to_loc(),
-                    },
-                    end: Some(ShiftEnd {
-                        earliest: None,
-                        latest: format_time(1000.),
-                        location: (0., 0.).to_loc(),
-                    }),
+                    start: ShiftStart { earliest: format_time(0.), latest: None, location: (0., 0.).to_loc() },
+                    end: Some(ShiftEnd { earliest: None, latest: format_time(1000.), location: (0., 0.).to_loc() }),
                     breaks: None,
                     reloads: None,
                     recharges: None,
-                    job_times: Some(JobTimeConstraints {
-                        earliest_first: Some(format_time(10.)),
-                        latest_last: None,
-                    }),
+                    job_times: Some(JobTimeConstraints { earliest_first: Some(format_time(10.)), latest_last: None }),
                 }],
                 costs: VehicleCosts {
                     fixed: Some(10.),
@@ -411,10 +369,7 @@ fn can_work_with_depot_to_depot_span() {
 
     // Job should still be rejected due to job_times constraint
     assert!(solution.unassigned.is_some(), "Job should be unassigned");
-    assert_eq!(
-        solution.unassigned.as_ref().unwrap()[0].reasons[0].code,
-        "JOB_TIME_CONSTRAINT"
-    );
+    assert_eq!(solution.unassigned.as_ref().unwrap()[0].reasons[0].code, "JOB_TIME_CONSTRAINT");
 }
 
 #[test]
@@ -516,12 +471,8 @@ fn earliest_first_only_applies_to_first_job() {
     // Both jobs should be assigned
     assert!(solution.unassigned.is_none(), "Both jobs should be assigned");
     assert_eq!(solution.tours.len(), 1);
-    let assigned_jobs: Vec<_> = solution.tours[0]
-        .stops
-        .iter()
-        .flat_map(|stop| stop.activities().iter())
-        .map(|a| a.job_id.as_str())
-        .collect();
+    let assigned_jobs: Vec<_> =
+        solution.tours[0].stops.iter().flat_map(|stop| stop.activities().iter()).map(|a| a.job_id.as_str()).collect();
     assert!(assigned_jobs.contains(&"job1"), "job1 should be assigned");
     assert!(assigned_jobs.contains(&"job2"), "job2 should be assigned");
 }

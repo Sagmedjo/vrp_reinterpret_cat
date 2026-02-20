@@ -35,8 +35,7 @@ fn check_break_assignment(context: &CheckerContext) -> GenericResult<()> {
                     |acc, (from_loc, (from, to), (break_activity, vehicle_break))| {
                         // check time
                         let visit_time = get_time_window(stop, break_activity);
-                        let break_time_window =
-                            get_break_time_window(tour, &vehicle_break, cost_span)?;
+                        let break_time_window = get_break_time_window(tour, &vehicle_break, cost_span)?;
                         if !visit_time.intersects(&break_time_window) {
                             return Err(format!(
                                 "break visit time '{visit_time:?}' is invalid: expected is in '{break_time_window:?}'",
@@ -96,8 +95,8 @@ fn check_break_assignment(context: &CheckerContext) -> GenericResult<()> {
 
         let expected_break_count =
             vehicle_shift.breaks.iter().flat_map(|breaks| breaks.iter()).fold(0, |acc, vehicle_break| {
-                let break_tw = get_break_time_window(tour, vehicle_break, cost_span)
-                    .expect("cannot get break time windows");
+                let break_tw =
+                    get_break_time_window(tour, vehicle_break, cost_span).expect("cannot get break time windows");
 
                 let should_assign = match vehicle_break {
                     VehicleBreak::Optional { policy, .. } => {
@@ -211,14 +210,19 @@ pub(crate) fn get_break_time_window(
 /// Gets the arrival time of the first job activity in the tour.
 fn get_first_job_arrival(tour: &Tour) -> Option<Timestamp> {
     // The first stop is departure, so first job is the second stop (or first non-departure activity)
-    tour.stops.iter().flat_map(|stop| stop.activities().iter()).find(|a| {
-        !matches!(a.activity_type.as_str(), "departure" | "arrival")
-    }).and_then(|_| {
-        // Find the stop that contains the first job activity and get its arrival
-        tour.stops.iter().find(|stop| {
-            stop.activities().iter().any(|a| !matches!(a.activity_type.as_str(), "departure" | "arrival"))
-        }).map(|stop| parse_time(&stop.schedule().arrival))
-    })
+    tour.stops
+        .iter()
+        .flat_map(|stop| stop.activities().iter())
+        .find(|a| !matches!(a.activity_type.as_str(), "departure" | "arrival"))
+        .and_then(|_| {
+            // Find the stop that contains the first job activity and get its arrival
+            tour.stops
+                .iter()
+                .find(|stop| {
+                    stop.activities().iter().any(|a| !matches!(a.activity_type.as_str(), "departure" | "arrival"))
+                })
+                .map(|stop| parse_time(&stop.schedule().arrival))
+        })
 }
 
 fn get_break_violation_count(solution: &Solution, tour: &Tour) -> usize {

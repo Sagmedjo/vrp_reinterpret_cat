@@ -136,7 +136,15 @@ fn read_required_jobs(
             .map(|p| (Some(p.location.clone()), p.duration, parse_times(&p.times), p.tag.clone()))
             .collect();
 
-        get_single_with_dimens(places, demand, &task.order, &task.due_date, activity_type, has_multi_dimens, coord_index)
+        get_single_with_dimens(
+            places,
+            demand,
+            &task.order,
+            &task.due_date,
+            activity_type,
+            has_multi_dimens,
+            coord_index,
+        )
     };
 
     api_problem.plan.jobs.iter().for_each(|job| {

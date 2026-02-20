@@ -186,9 +186,7 @@ impl CheckerContext {
                     .as_ref()
                     .and_then(|breaks| {
                         breaks.iter().find(|b| {
-                            get_break_time_window(tour, b, cost_span)
-                                .map(|tw| tw.intersects(&time))
-                                .unwrap_or(false)
+                            get_break_time_window(tour, b, cost_span).map(|tw| tw.intersects(&time)).unwrap_or(false)
                         })
                     })
                     .map(|b| ActivityType::Break(b.clone()))

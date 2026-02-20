@@ -115,10 +115,10 @@ fn can_assign_break_during_activity() {
                                 ActivityBuilder::delivery()
                                     .job_id("job1")
                                     .coordinate((5., 0.))
-                                    .time_stamp(5., 10.)
+                                    .time_stamp(5., 8.)
                                     .build()
                             )
-                            .activity(ActivityBuilder::break_type().time_stamp(7., 9.).build())
+                            .activity(ActivityBuilder::break_type().time_stamp(8., 10.).build())
                             .build(),
                         StopBuilder::default()
                             .coordinate((0., 0.))
@@ -266,7 +266,6 @@ fn can_handle_required_break_with_infeasible_sequence_relation() {
             demand: None,
             order: None,
             due_date: None,
-
         }]),
         ..create_job(index.to_string().as_str())
     };

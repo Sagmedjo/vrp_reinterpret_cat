@@ -20,14 +20,24 @@ fn collect_activity_intervals(tour: &Tour) -> Vec<(f64, f64, String, String)> {
         if activities.len() == 1 {
             let a = &activities[0];
             if let Some(time) = &a.time {
-                intervals.push((parse_time(&time.start), parse_time(&time.end), a.activity_type.clone(), a.job_id.clone()));
+                intervals.push((
+                    parse_time(&time.start),
+                    parse_time(&time.end),
+                    a.activity_type.clone(),
+                    a.job_id.clone(),
+                ));
             } else {
                 intervals.push((stop_arrival, stop_departure, a.activity_type.clone(), a.job_id.clone()));
             }
         } else {
             for a in activities {
                 if let Some(time) = &a.time {
-                    intervals.push((parse_time(&time.start), parse_time(&time.end), a.activity_type.clone(), a.job_id.clone()));
+                    intervals.push((
+                        parse_time(&time.start),
+                        parse_time(&time.end),
+                        a.activity_type.clone(),
+                        a.job_id.clone(),
+                    ));
                 } else {
                     intervals.push((stop_arrival, stop_departure, a.activity_type.clone(), a.job_id.clone()));
                 }
@@ -51,9 +61,11 @@ fn validate_tour_breaks_and_schedule(tour: &Tour, expected_break_count: usize, e
     // 1. Break count and duration
     let break_intervals: Vec<_> = intervals.iter().filter(|(_, _, typ, _)| typ == "break").collect();
     assert_eq!(
-        break_intervals.len(), expected_break_count,
+        break_intervals.len(),
+        expected_break_count,
         "expected {expected_break_count} break(s), got {}\ntour stops: {}",
-        break_intervals.len(), format_tour_debug(tour)
+        break_intervals.len(),
+        format_tour_debug(tour)
     );
 
     for (start, end, _, _) in &break_intervals {
@@ -66,9 +78,8 @@ fn validate_tour_breaks_and_schedule(tour: &Tour, expected_break_count: usize, e
     }
 
     // 2. Breaks don't overlap with job activities at DIFFERENT stops
-    let non_break_job_intervals: Vec<_> = intervals.iter()
-        .filter(|(_, _, typ, _)| typ != "break" && typ != "departure" && typ != "arrival")
-        .collect();
+    let non_break_job_intervals: Vec<_> =
+        intervals.iter().filter(|(_, _, typ, _)| typ != "break" && typ != "departure" && typ != "arrival").collect();
 
     for (b_start, b_end, _, _) in &break_intervals {
         for (a_start, a_end, a_type, a_id) in &non_break_job_intervals {
@@ -94,7 +105,11 @@ fn validate_tour_breaks_and_schedule(tour: &Tour, expected_break_count: usize, e
         let dep = parse_time(&stop.schedule().departure);
         assert!(dep >= arr - 0.001, "stop {i}: departure ({dep}) < arrival ({arr})\ntour: {}", format_tour_debug(tour));
         if let Some(prev_dep) = prev_departure {
-            assert!(arr >= prev_dep - 0.001, "stop {i}: arrival ({arr}) < previous departure ({prev_dep})\ntour: {}", format_tour_debug(tour));
+            assert!(
+                arr >= prev_dep - 0.001,
+                "stop {i}: arrival ({arr}) < previous departure ({prev_dep})\ntour: {}",
+                format_tour_debug(tour)
+            );
         }
         prev_departure = Some(dep);
     }
@@ -112,22 +127,27 @@ fn validate_tour_breaks_and_schedule(tour: &Tour, expected_break_count: usize, e
                 assert!(
                     act_end >= act_start - 0.001,
                     "stop {i}: activity '{}' ({}) has end ({act_end}) < start ({act_start})\ntour: {}",
-                    act.job_id, act.activity_type, format_tour_debug(tour)
+                    act.job_id,
+                    act.activity_type,
+                    format_tour_debug(tour)
                 );
                 assert!(
                     act_start >= stop_arr - 0.001,
                     "stop {i}: activity '{}' start ({act_start}) < stop arrival ({stop_arr})\ntour: {}",
-                    act.job_id, format_tour_debug(tour)
+                    act.job_id,
+                    format_tour_debug(tour)
                 );
                 assert!(
                     act_end <= stop_dep + 0.001,
                     "stop {i}: activity '{}' end ({act_end}) > stop departure ({stop_dep})\ntour: {}",
-                    act.job_id, format_tour_debug(tour)
+                    act.job_id,
+                    format_tour_debug(tour)
                 );
                 assert!(
                     act_start >= prev_act_start - 0.001,
                     "stop {i}: activity '{}' start ({act_start}) < previous activity start ({prev_act_start}) — not time-ordered\ntour: {}",
-                    act.job_id, format_tour_debug(tour)
+                    act.job_id,
+                    format_tour_debug(tour)
                 );
                 prev_act_start = act_start;
             }
@@ -152,7 +172,8 @@ fn validate_tour_breaks_and_schedule(tour: &Tour, expected_break_count: usize, e
                 assert!(
                     act.location.is_none(),
                     "required break should have no location, but got {:?}\ntour: {}",
-                    act.location, format_tour_debug(tour)
+                    act.location,
+                    format_tour_debug(tour)
                 );
             }
         }
@@ -173,10 +194,14 @@ fn format_tour_debug(tour: &Tour) -> String {
     for (i, stop) in tour.stops.iter().enumerate() {
         let s = stop.schedule();
         let loc = stop.location().map(|l| format!("{l:?}")).unwrap_or_default();
-        let acts: Vec<_> = stop.activities().iter().map(|a| {
-            let t = a.time.as_ref().map(|t| format!("[{}..{}]", t.start, t.end)).unwrap_or_default();
-            format!("  {}({}) {}", a.job_id, a.activity_type, t)
-        }).collect();
+        let acts: Vec<_> = stop
+            .activities()
+            .iter()
+            .map(|a| {
+                let t = a.time.as_ref().map(|t| format!("[{}..{}]", t.start, t.end)).unwrap_or_default();
+                format!("  {}({}) {}", a.job_id, a.activity_type, t)
+            })
+            .collect();
         let stop_type = if matches!(stop, Stop::Transit(_)) { "T" } else { "P" };
         lines.push(format!("  stop {i}{stop_type} {loc}: arr={} dep={}", s.arrival, s.departure));
         for a in acts {
@@ -194,10 +219,7 @@ fn format_tour_debug(tour: &Tour) -> String {
 fn can_assign_offset_break_with_flexible_departure() {
     let problem = Problem {
         plan: Plan {
-            jobs: vec![
-                create_delivery_job("job1", (5., 0.)),
-                create_delivery_job("job2", (15., 0.)),
-            ],
+            jobs: vec![create_delivery_job("job1", (5., 0.)), create_delivery_job("job2", (15., 0.))],
             ..create_empty_plan()
         },
         fleet: Fleet {
@@ -269,10 +291,7 @@ fn can_assign_offset_break_with_wide_end_window_and_late_jobs() {
 fn can_assign_offset_break_with_recede_departure() {
     let problem = Problem {
         plan: Plan {
-            jobs: vec![
-                create_delivery_job("job1", (5., 0.)),
-                create_delivery_job("job2", (15., 0.)),
-            ],
+            jobs: vec![create_delivery_job("job1", (5., 0.)), create_delivery_job("job2", (15., 0.))],
             ..create_empty_plan()
         },
         fleet: Fleet {
@@ -318,12 +337,15 @@ fn can_handle_mixed_break_types_in_validation() {
             vehicles: vec![VehicleType {
                 shifts: vec![VehicleShift {
                     start: ShiftStart {
-                        earliest: format_time(0.), latest: Some(format_time(0.)), location: (0., 0.).to_loc(),
+                        earliest: format_time(0.),
+                        latest: Some(format_time(0.)),
+                        location: (0., 0.).to_loc(),
                     },
                     breaks: Some(vec![
                         VehicleBreak::Required {
                             time: VehicleRequiredBreakTime::ExactTime {
-                                earliest: format_time(7.), latest: format_time(7.),
+                                earliest: format_time(7.),
+                                latest: format_time(7.),
                             },
                             duration: 2.,
                         },
@@ -347,8 +369,8 @@ fn can_handle_mixed_break_types_in_validation() {
     validate_solution_breaks(&solution, 2, 2.0);
 
     let intervals = collect_activity_intervals(&solution.tours[0]);
-    let mut break_starts: Vec<f64> = intervals.iter()
-        .filter(|(_, _, t, _)| t == "break").map(|(s, _, _, _)| *s).collect();
+    let mut break_starts: Vec<f64> =
+        intervals.iter().filter(|(_, _, t, _)| t == "break").map(|(s, _, _, _)| *s).collect();
     break_starts.sort_by(|a, b| a.total_cmp(b));
     assert_eq!(break_starts.len(), 2);
     assert!((break_starts[0] - 7.0).abs() < 1.0, "first break should start at ~7, got {}", break_starts[0]);
@@ -363,21 +385,22 @@ fn can_handle_mixed_break_types_in_validation() {
 fn can_assign_offset_break_with_first_job_cost_span() {
     let problem = Problem {
         plan: Plan {
-            jobs: vec![
-                create_delivery_job("job1", (10., 0.)),
-                create_delivery_job("job2", (25., 0.)),
-            ],
+            jobs: vec![create_delivery_job("job1", (10., 0.)), create_delivery_job("job2", (25., 0.))],
             ..create_empty_plan()
         },
         fleet: Fleet {
             vehicles: vec![VehicleType {
                 costs: VehicleCosts {
-                    fixed: Some(10.), distance: 1., time: 1.,
+                    fixed: Some(10.),
+                    distance: 1.,
+                    time: 1.,
                     span: Some(RouteCostSpan::FirstJobToLastJob),
                 },
                 shifts: vec![VehicleShift {
                     start: ShiftStart {
-                        earliest: format_time(0.), latest: Some(format_time(0.)), location: (0., 0.).to_loc(),
+                        earliest: format_time(0.),
+                        latest: Some(format_time(0.)),
+                        location: (0., 0.).to_loc(),
                     },
                     end: Some(ShiftEnd { earliest: None, latest: format_time(200.), location: (0., 0.).to_loc() }),
                     breaks: Some(vec![VehicleBreak::Required {
@@ -405,7 +428,8 @@ fn can_assign_offset_break_with_first_job_cost_span() {
     assert!(
         (offset_from_first_job - 7.0).abs() < 1.0,
         "break offset from first job arrival ({}) should be ~7, got {offset_from_first_job} (break at {})",
-        first_job.0, brk.0
+        first_job.0,
+        brk.0
     );
 }
 
@@ -423,12 +447,16 @@ fn can_assign_offset_break_with_first_job_span_and_range_offset() {
         fleet: Fleet {
             vehicles: vec![VehicleType {
                 costs: VehicleCosts {
-                    fixed: Some(10.), distance: 1., time: 1.,
+                    fixed: Some(10.),
+                    distance: 1.,
+                    time: 1.,
                     span: Some(RouteCostSpan::FirstJobToLastJob),
                 },
                 shifts: vec![VehicleShift {
                     start: ShiftStart {
-                        earliest: format_time(0.), latest: Some(format_time(0.)), location: (0., 0.).to_loc(),
+                        earliest: format_time(0.),
+                        latest: Some(format_time(0.)),
+                        location: (0., 0.).to_loc(),
                     },
                     end: Some(ShiftEnd { earliest: None, latest: format_time(200.), location: (0., 0.).to_loc() }),
                     breaks: Some(vec![VehicleBreak::Required {
@@ -450,7 +478,8 @@ fn can_assign_offset_break_with_first_job_span_and_range_offset() {
     validate_solution_breaks(&solution, 1, 2.0);
 
     let intervals = collect_activity_intervals(&solution.tours[0]);
-    let first_route_job = intervals.iter()
+    let first_route_job = intervals
+        .iter()
         .find(|(_, _, typ, _)| typ != "departure" && typ != "arrival" && typ != "break")
         .expect("no job in route");
     let brk = intervals.iter().find(|(_, _, t, _)| t == "break").unwrap();
@@ -458,7 +487,8 @@ fn can_assign_offset_break_with_first_job_span_and_range_offset() {
     assert!(
         offset >= 6.0 && offset <= 14.0,
         "break offset from first job arrival ({}) should be in [7..12], got {offset} (break at {})",
-        first_route_job.0, brk.0
+        first_route_job.0,
+        brk.0
     );
 }
 
@@ -484,7 +514,9 @@ fn can_assign_wide_range_offset_break_during_long_travel() {
             vehicles: vec![VehicleType {
                 shifts: vec![VehicleShift {
                     start: ShiftStart {
-                        earliest: format_time(0.), latest: Some(format_time(0.)), location: (0., 0.).to_loc(),
+                        earliest: format_time(0.),
+                        latest: Some(format_time(0.)),
+                        location: (0., 0.).to_loc(),
                     },
                     end: Some(ShiftEnd { earliest: None, latest: format_time(500.), location: (0., 0.).to_loc() }),
                     breaks: Some(vec![VehicleBreak::Required {
@@ -522,7 +554,9 @@ fn can_place_wide_offset_break_on_transit_leg_with_consistent_times() {
             vehicles: vec![VehicleType {
                 shifts: vec![VehicleShift {
                     start: ShiftStart {
-                        earliest: format_time(0.), latest: Some(format_time(0.)), location: (0., 0.).to_loc(),
+                        earliest: format_time(0.),
+                        latest: Some(format_time(0.)),
+                        location: (0., 0.).to_loc(),
                     },
                     end: Some(ShiftEnd { earliest: None, latest: format_time(500.), location: (0., 0.).to_loc() }),
                     breaks: Some(vec![VehicleBreak::Required {
@@ -562,11 +596,8 @@ fn can_place_wide_offset_break_on_transit_leg_with_consistent_times() {
 
     assert_eq!(break_positions.len(), 1, "expected exactly one break\n{debug}");
 
-    let flat_order: Vec<_> = tour
-        .stops
-        .iter()
-        .flat_map(|stop| stop.activities().iter().map(|activity| activity.job_id.clone()))
-        .collect();
+    let flat_order: Vec<_> =
+        tour.stops.iter().flat_map(|stop| stop.activities().iter().map(|activity| activity.job_id.clone())).collect();
     assert_eq!(
         flat_order,
         vec!["departure", "job1", "break", "job2", "arrival"],
@@ -580,15 +611,8 @@ fn can_place_wide_offset_break_on_transit_leg_with_consistent_times() {
     );
 
     let break_stop = &tour.stops[break_stop_idx];
-    assert!(
-        matches!(break_stop, Stop::Transit(_)),
-        "break should be attached to transit stop\n{debug}"
-    );
-    assert_eq!(
-        break_stop.activities().len(),
-        1,
-        "transit break stop should have a single break activity\n{debug}"
-    );
+    assert!(matches!(break_stop, Stop::Transit(_)), "break should be attached to transit stop\n{debug}");
+    assert_eq!(break_stop.activities().len(), 1, "transit break stop should have a single break activity\n{debug}");
 
     let prev_stop = &tour.stops[break_stop_idx - 1];
     let next_stop = &tour.stops[break_stop_idx + 1];
@@ -632,10 +656,7 @@ fn can_place_wide_offset_break_on_transit_leg_with_consistent_times() {
 
     let departure = parse_time(&tour.stops[0].schedule().departure);
     let offset = break_start - departure;
-    assert!(
-        (offset - 40.0).abs() <= 1.0,
-        "break offset from tour departure should be near 40, got {offset}\n{debug}"
-    );
+    assert!((offset - 40.0).abs() <= 1.0, "break offset from tour departure should be near 40, got {offset}\n{debug}");
 }
 
 #[test]
@@ -654,7 +675,9 @@ fn can_keep_job_activity_duration_when_break_starts_at_activity_end_on_same_stop
             vehicles: vec![VehicleType {
                 shifts: vec![VehicleShift {
                     start: ShiftStart {
-                        earliest: format_time(0.), latest: Some(format_time(0.)), location: (0., 0.).to_loc(),
+                        earliest: format_time(0.),
+                        latest: Some(format_time(0.)),
+                        location: (0., 0.).to_loc(),
                     },
                     end: Some(ShiftEnd { earliest: None, latest: format_time(300.), location: (0., 0.).to_loc() }),
                     breaks: Some(vec![VehicleBreak::Required {
@@ -691,11 +714,8 @@ fn can_keep_job_activity_duration_when_break_starts_at_activity_end_on_same_stop
 
     assert_eq!(break_positions.len(), 1, "expected exactly one break\n{debug}");
 
-    let flat_order: Vec<_> = tour
-        .stops
-        .iter()
-        .flat_map(|stop| stop.activities().iter().map(|activity| activity.job_id.clone()))
-        .collect();
+    let flat_order: Vec<_> =
+        tour.stops.iter().flat_map(|stop| stop.activities().iter().map(|activity| activity.job_id.clone())).collect();
     assert_eq!(
         flat_order,
         vec!["departure", "job1", "break", "job2", "arrival"],
@@ -773,6 +793,91 @@ fn can_keep_job_activity_duration_when_break_starts_at_activity_end_on_same_stop
 }
 
 #[test]
+fn can_align_required_break_to_job_boundary_when_reserved_time_hits_mid_activity() {
+    let problem = Problem {
+        plan: Plan { jobs: vec![create_delivery_job_with_duration("job1", (5., 0.), 3.)], ..create_empty_plan() },
+        fleet: Fleet {
+            vehicles: vec![VehicleType {
+                shifts: vec![VehicleShift {
+                    start: ShiftStart {
+                        earliest: format_time(0.),
+                        latest: Some(format_time(0.)),
+                        location: (0., 0.).to_loc(),
+                    },
+                    end: Some(ShiftEnd { earliest: None, latest: format_time(200.), location: (0., 0.).to_loc() }),
+                    breaks: Some(vec![VehicleBreak::Required {
+                        time: VehicleRequiredBreakTime::ExactTime {
+                            earliest: format_time(7.),
+                            latest: format_time(7.),
+                        },
+                        duration: 2.,
+                    }]),
+                    ..create_default_vehicle_shift()
+                }],
+                ..create_default_vehicle_type()
+            }],
+            ..create_default_fleet()
+        },
+        ..create_empty_problem()
+    };
+    let matrix = create_matrix_from_problem(&problem);
+    let solution = solve_with_metaheuristic(problem, Some(vec![matrix]));
+
+    assert!(solution.unassigned.is_none(), "expected all jobs assigned");
+    assert_eq!(solution.tours.len(), 1, "expected one tour");
+
+    let tour = &solution.tours[0];
+    let debug = format_tour_debug(tour);
+
+    let stop = tour
+        .stops
+        .iter()
+        .find(|stop| {
+            stop.activities().iter().any(|activity| activity.job_id == "job1")
+                && stop.activities().iter().any(|activity| activity.activity_type == "break")
+        })
+        .expect("expected job1 and break at same stop");
+
+    let stop_arrival = parse_time(&stop.schedule().arrival);
+    let stop_departure = parse_time(&stop.schedule().departure);
+
+    let job = stop.activities().iter().find(|activity| activity.job_id == "job1").expect("job1 activity");
+    let brk = stop.activities().iter().find(|activity| activity.activity_type == "break").expect("break activity");
+
+    let (job_start, job_end) = job
+        .time
+        .as_ref()
+        .map(|time| (parse_time(&time.start), parse_time(&time.end)))
+        .unwrap_or((stop_arrival, stop_departure));
+    let (break_start, break_end) = brk
+        .time
+        .as_ref()
+        .map(|time| (parse_time(&time.start), parse_time(&time.end)))
+        .unwrap_or((stop_arrival, stop_departure));
+
+    assert!(
+        ((job_end - job_start) - 3.0).abs() < 1e-3,
+        "job1 duration should stay equal to service duration, got {}\n{debug}",
+        job_end - job_start
+    );
+    assert!(
+        (break_start - job_end).abs() <= 1e-3 || (job_start - break_end).abs() <= 1e-3,
+        "break should start at job end or finish at job start, got job=[{job_start}..{job_end}], break=[{break_start}..{break_end}]\n{debug}"
+    );
+    assert!(
+        !(break_start < job_end - 1e-3 && job_start < break_end - 1e-3),
+        "break should not overlap job activity at same stop: job=[{job_start}..{job_end}], break=[{break_start}..{break_end}]\n{debug}"
+    );
+    assert!(
+        break_start >= stop_arrival - 1e-3 && break_end <= stop_departure + 1e-3,
+        "break should stay within stop bounds: stop=[{stop_arrival}..{stop_departure}], break=[{break_start}..{break_end}]\n{debug}"
+    );
+
+    validate_tour_schedule_only(tour);
+    validate_no_break_job_overlap(tour);
+}
+
+#[test]
 fn can_skip_required_break_when_it_starts_at_tour_end_boundary() {
     let problem = Problem {
         plan: Plan { jobs: vec![create_delivery_job("job1", (5., 0.))], ..create_empty_plan() },
@@ -780,7 +885,9 @@ fn can_skip_required_break_when_it_starts_at_tour_end_boundary() {
             vehicles: vec![VehicleType {
                 shifts: vec![VehicleShift {
                     start: ShiftStart {
-                        earliest: format_time(0.), latest: Some(format_time(0.)), location: (0., 0.).to_loc(),
+                        earliest: format_time(0.),
+                        latest: Some(format_time(0.)),
+                        location: (0., 0.).to_loc(),
                     },
                     end: Some(ShiftEnd { earliest: None, latest: format_time(200.), location: (0., 0.).to_loc() }),
                     breaks: Some(vec![VehicleBreak::Required {
@@ -810,21 +917,11 @@ fn can_skip_required_break_when_it_starts_at_tour_end_boundary() {
         .flat_map(|stop| stop.activities().iter())
         .filter(|activity| activity.activity_type == "break")
         .count();
-    assert_eq!(
-        break_count, 0,
-        "required break should be skipped when it only touches tour end boundary\n{debug}"
-    );
+    assert_eq!(break_count, 0, "required break should be skipped when it only touches tour end boundary\n{debug}");
 
-    let flat_order: Vec<_> = tour
-        .stops
-        .iter()
-        .flat_map(|stop| stop.activities().iter().map(|activity| activity.job_id.clone()))
-        .collect();
-    assert_eq!(
-        flat_order,
-        vec!["departure", "job1", "arrival"],
-        "unexpected flattened activity order\n{debug}"
-    );
+    let flat_order: Vec<_> =
+        tour.stops.iter().flat_map(|stop| stop.activities().iter().map(|activity| activity.job_id.clone())).collect();
+    assert_eq!(flat_order, vec!["departure", "job1", "arrival"], "unexpected flattened activity order\n{debug}");
 
     let last_stop = tour.stops.last().expect("expected last stop");
     let last_arrival = parse_time(&last_stop.schedule().arrival);
@@ -853,7 +950,9 @@ fn can_assign_range_offset_break_without_wrong_departure_shift() {
             vehicles: vec![VehicleType {
                 shifts: vec![VehicleShift {
                     start: ShiftStart {
-                        earliest: format_time(0.), latest: Some(format_time(0.)), location: (0., 0.).to_loc(),
+                        earliest: format_time(0.),
+                        latest: Some(format_time(0.)),
+                        location: (0., 0.).to_loc(),
                     },
                     end: Some(ShiftEnd { earliest: None, latest: format_time(200.), location: (0., 0.).to_loc() }),
                     breaks: Some(vec![VehicleBreak::Required {
@@ -900,7 +999,9 @@ fn can_assign_break_with_many_closely_spaced_jobs_and_long_service() {
             vehicles: vec![VehicleType {
                 shifts: vec![VehicleShift {
                     start: ShiftStart {
-                        earliest: format_time(0.), latest: Some(format_time(0.)), location: (0., 0.).to_loc(),
+                        earliest: format_time(0.),
+                        latest: Some(format_time(0.)),
+                        location: (0., 0.).to_loc(),
                     },
                     end: Some(ShiftEnd { earliest: None, latest: format_time(300.), location: (0., 0.).to_loc() }),
                     breaks: Some(vec![VehicleBreak::Required {
@@ -952,7 +1053,9 @@ fn can_assign_break_with_pickup_delivery_jobs() {
             vehicles: vec![VehicleType {
                 shifts: vec![VehicleShift {
                     start: ShiftStart {
-                        earliest: format_time(0.), latest: Some(format_time(0.)), location: (0., 0.).to_loc(),
+                        earliest: format_time(0.),
+                        latest: Some(format_time(0.)),
+                        location: (0., 0.).to_loc(),
                     },
                     end: Some(ShiftEnd { earliest: None, latest: format_time(300.), location: (0., 0.).to_loc() }),
                     breaks: Some(vec![VehicleBreak::Required {
@@ -992,7 +1095,9 @@ fn can_assign_break_with_tight_time_windows_and_long_break() {
             vehicles: vec![VehicleType {
                 shifts: vec![VehicleShift {
                     start: ShiftStart {
-                        earliest: format_time(0.), latest: Some(format_time(0.)), location: (0., 0.).to_loc(),
+                        earliest: format_time(0.),
+                        latest: Some(format_time(0.)),
+                        location: (0., 0.).to_loc(),
                     },
                     end: Some(ShiftEnd { earliest: None, latest: format_time(300.), location: (0., 0.).to_loc() }),
                     breaks: Some(vec![VehicleBreak::Required {
@@ -1036,7 +1141,9 @@ fn can_assign_break_with_multiple_vehicles() {
                     vehicle_ids: vec!["v1".to_string()],
                     shifts: vec![VehicleShift {
                         start: ShiftStart {
-                            earliest: format_time(0.), latest: Some(format_time(0.)), location: (0., 0.).to_loc(),
+                            earliest: format_time(0.),
+                            latest: Some(format_time(0.)),
+                            location: (0., 0.).to_loc(),
                         },
                         end: Some(ShiftEnd { earliest: None, latest: format_time(300.), location: (0., 0.).to_loc() }),
                         breaks: Some(vec![VehicleBreak::Required {
@@ -1053,7 +1160,9 @@ fn can_assign_break_with_multiple_vehicles() {
                     vehicle_ids: vec!["v2".to_string()],
                     shifts: vec![VehicleShift {
                         start: ShiftStart {
-                            earliest: format_time(0.), latest: Some(format_time(0.)), location: (0., 0.).to_loc(),
+                            earliest: format_time(0.),
+                            latest: Some(format_time(0.)),
+                            location: (0., 0.).to_loc(),
                         },
                         end: Some(ShiftEnd { earliest: None, latest: format_time(300.), location: (0., 0.).to_loc() }),
                         breaks: Some(vec![VehicleBreak::Required {
@@ -1145,7 +1254,9 @@ fn can_assign_break_with_first_job_span_flexible_departure_and_wide_offset() {
         fleet: Fleet {
             vehicles: vec![VehicleType {
                 costs: VehicleCosts {
-                    fixed: Some(10.), distance: 1., time: 1.,
+                    fixed: Some(10.),
+                    distance: 1.,
+                    time: 1.,
                     span: Some(RouteCostSpan::FirstJobToLastJob),
                 },
                 shifts: vec![VehicleShift {
@@ -1171,7 +1282,8 @@ fn can_assign_break_with_first_job_span_flexible_departure_and_wide_offset() {
     // Verify offset is relative to first job, not departure
     let tour = &solution.tours[0];
     let intervals = collect_activity_intervals(tour);
-    let first_route_job = intervals.iter()
+    let first_route_job = intervals
+        .iter()
         .find(|(_, _, typ, _)| typ != "departure" && typ != "arrival" && typ != "break")
         .expect("no job in route");
     let brk = intervals.iter().find(|(_, _, t, _)| t == "break").unwrap();
@@ -1179,7 +1291,9 @@ fn can_assign_break_with_first_job_span_flexible_departure_and_wide_offset() {
     assert!(
         offset >= 3.0 && offset <= 12.0,
         "break offset from first job ({}) should be in [4..10], got {offset} (break at {})\ntour: {}",
-        first_route_job.0, brk.0, format_tour_debug(tour)
+        first_route_job.0,
+        brk.0,
+        format_tour_debug(tour)
     );
 }
 
@@ -1200,7 +1314,9 @@ fn can_assign_break_with_first_job_span_late_time_windows_and_wide_offset() {
         fleet: Fleet {
             vehicles: vec![VehicleType {
                 costs: VehicleCosts {
-                    fixed: Some(10.), distance: 1., time: 1.,
+                    fixed: Some(10.),
+                    distance: 1.,
+                    time: 1.,
                     span: Some(RouteCostSpan::FirstJobToLastJob),
                 },
                 shifts: vec![VehicleShift {
@@ -1245,7 +1361,9 @@ fn can_assign_break_with_jobs_requiring_long_service_times() {
             vehicles: vec![VehicleType {
                 shifts: vec![VehicleShift {
                     start: ShiftStart {
-                        earliest: format_time(0.), latest: Some(format_time(0.)), location: (0., 0.).to_loc(),
+                        earliest: format_time(0.),
+                        latest: Some(format_time(0.)),
+                        location: (0., 0.).to_loc(),
                     },
                     end: Some(ShiftEnd { earliest: None, latest: format_time(500.), location: (0., 0.).to_loc() }),
                     breaks: Some(vec![VehicleBreak::Required {
@@ -1287,7 +1405,9 @@ fn can_assign_two_offset_breaks_with_wide_ranges() {
             vehicles: vec![VehicleType {
                 shifts: vec![VehicleShift {
                     start: ShiftStart {
-                        earliest: format_time(0.), latest: Some(format_time(0.)), location: (0., 0.).to_loc(),
+                        earliest: format_time(0.),
+                        latest: Some(format_time(0.)),
+                        location: (0., 0.).to_loc(),
                     },
                     end: Some(ShiftEnd { earliest: None, latest: format_time(500.), location: (0., 0.).to_loc() }),
                     breaks: Some(vec![
@@ -1348,13 +1468,16 @@ fn can_assign_exact_and_offset_breaks_with_many_jobs() {
             vehicles: vec![VehicleType {
                 shifts: vec![VehicleShift {
                     start: ShiftStart {
-                        earliest: format_time(0.), latest: Some(format_time(0.)), location: (0., 0.).to_loc(),
+                        earliest: format_time(0.),
+                        latest: Some(format_time(0.)),
+                        location: (0., 0.).to_loc(),
                     },
                     end: Some(ShiftEnd { earliest: None, latest: format_time(500.), location: (0., 0.).to_loc() }),
                     breaks: Some(vec![
                         VehicleBreak::Required {
                             time: VehicleRequiredBreakTime::ExactTime {
-                                earliest: format_time(10.), latest: format_time(10.),
+                                earliest: format_time(10.),
+                                latest: format_time(10.),
                             },
                             duration: 2.,
                         },
@@ -1401,7 +1524,11 @@ fn validate_tour_schedule_only(tour: &Tour) {
         let dep = parse_time(&stop.schedule().departure);
         assert!(dep >= arr - 0.001, "stop {i}: dep ({dep}) < arr ({arr})\ntour: {}", format_tour_debug(tour));
         if let Some(prev_dep) = prev_departure {
-            assert!(arr >= prev_dep - 0.001, "stop {i}: arr ({arr}) < prev dep ({prev_dep})\ntour: {}", format_tour_debug(tour));
+            assert!(
+                arr >= prev_dep - 0.001,
+                "stop {i}: arr ({arr}) < prev dep ({prev_dep})\ntour: {}",
+                format_tour_debug(tour)
+            );
         }
         prev_departure = Some(dep);
 
@@ -1410,9 +1537,24 @@ fn validate_tour_schedule_only(tour: &Tour) {
             if let Some(time) = &act.time {
                 let a_start = parse_time(&time.start);
                 let a_end = parse_time(&time.end);
-                assert!(a_end >= a_start - 0.001, "stop {i}: activity '{}' end < start\ntour: {}", act.job_id, format_tour_debug(tour));
-                assert!(a_start >= arr - 0.001, "stop {i}: activity '{}' start ({a_start}) < stop arr ({arr})\ntour: {}", act.job_id, format_tour_debug(tour));
-                assert!(a_end <= dep + 0.001, "stop {i}: activity '{}' end ({a_end}) > stop dep ({dep})\ntour: {}", act.job_id, format_tour_debug(tour));
+                assert!(
+                    a_end >= a_start - 0.001,
+                    "stop {i}: activity '{}' end < start\ntour: {}",
+                    act.job_id,
+                    format_tour_debug(tour)
+                );
+                assert!(
+                    a_start >= arr - 0.001,
+                    "stop {i}: activity '{}' start ({a_start}) < stop arr ({arr})\ntour: {}",
+                    act.job_id,
+                    format_tour_debug(tour)
+                );
+                assert!(
+                    a_end <= dep + 0.001,
+                    "stop {i}: activity '{}' end ({a_end}) > stop dep ({dep})\ntour: {}",
+                    act.job_id,
+                    format_tour_debug(tour)
+                );
             }
         }
     }
@@ -1422,9 +1564,8 @@ fn validate_tour_schedule_only(tour: &Tour) {
 fn validate_no_break_job_overlap(tour: &Tour) {
     let intervals = collect_activity_intervals(tour);
     let breaks: Vec<_> = intervals.iter().filter(|(_, _, t, _)| t == "break").collect();
-    let jobs: Vec<_> = intervals.iter()
-        .filter(|(_, _, t, _)| t != "break" && t != "departure" && t != "arrival")
-        .collect();
+    let jobs: Vec<_> =
+        intervals.iter().filter(|(_, _, t, _)| t != "break" && t != "departure" && t != "arrival").collect();
 
     for (b_start, b_end, _, _) in &breaks {
         for (a_start, a_end, a_type, a_id) in &jobs {

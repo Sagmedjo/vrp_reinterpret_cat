@@ -11,14 +11,8 @@ fn create_actor_at(location: usize) -> Arc<Actor> {
     let vehicle = TestVehicleBuilder::default()
         .id(&format!("v_{location}"))
         .details(vec![crate::models::problem::VehicleDetail {
-            start: Some(VehiclePlace {
-                location,
-                time: TimeInterval { earliest: Some(0.0), latest: None },
-            }),
-            end: Some(VehiclePlace {
-                location,
-                time: TimeInterval { earliest: None, latest: Some(1000.0) },
-            }),
+            start: Some(VehiclePlace { location, time: TimeInterval { earliest: Some(0.0), latest: None } }),
+            end: Some(VehiclePlace { location, time: TimeInterval { earliest: None, latest: Some(1000.0) } }),
         }])
         .build();
 
@@ -26,14 +20,8 @@ fn create_actor_at(location: usize) -> Arc<Actor> {
         vehicle: Arc::new(vehicle),
         driver: Arc::new(test_driver()),
         detail: ActorDetail {
-            start: Some(VehiclePlace {
-                location,
-                time: TimeInterval { earliest: Some(0.0), latest: None },
-            }),
-            end: Some(VehiclePlace {
-                location,
-                time: TimeInterval { earliest: None, latest: Some(1000.0) },
-            }),
+            start: Some(VehiclePlace { location, time: TimeInterval { earliest: Some(0.0), latest: None } }),
+            end: Some(VehiclePlace { location, time: TimeInterval { earliest: None, latest: Some(1000.0) } }),
             time: TimeWindow { start: 0.0, end: 1000.0 },
         },
     })
@@ -70,10 +58,8 @@ fn can_create_feature_with_all_required_parameters() {
 #[test]
 fn can_return_error_when_transport_not_set() {
     let actors = vec![create_actor_at(0)];
-    let result = VehicleDistanceFeatureBuilder::new("test")
-        .set_actors(actors)
-        .set_compatibility_fn(|_, _| true)
-        .build();
+    let result =
+        VehicleDistanceFeatureBuilder::new("test").set_actors(actors).set_compatibility_fn(|_, _| true).build();
 
     assert!(result.is_err());
     assert!(result.unwrap_err().to_string().contains("transport"));

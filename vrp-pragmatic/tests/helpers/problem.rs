@@ -39,7 +39,6 @@ pub fn create_delivery_job_with_order(id: &str, location: (f64, f64), order: i32
             demand: Some(vec![1]),
             order: Some(order),
             due_date: None,
-
         }]),
         ..create_job(id)
     }
@@ -52,7 +51,6 @@ pub fn create_delivery_job_with_group(id: &str, location: (f64, f64), group: &st
             demand: Some(vec![1]),
             order: None,
             due_date: None,
-
         }]),
         group: Some(group.to_string()),
         ..create_job(id)
@@ -66,7 +64,6 @@ pub fn create_delivery_job_with_compatibility(id: &str, location: (f64, f64), co
             demand: Some(vec![1]),
             order: None,
             due_date: None,
-
         }]),
         compatibility: Some(compatibility.to_string()),
         ..create_job(id)
@@ -88,7 +85,6 @@ pub fn create_delivery_job_with_duration(id: &str, location: (f64, f64), duratio
             demand: Some(vec![1]),
             order: None,
             due_date: None,
-
         }]),
         ..create_job(id)
     }
@@ -106,7 +102,6 @@ pub fn create_delivery_job_with_times(
             demand: Some(vec![1]),
             order: None,
             due_date: None,
-
         }]),
         ..create_job(id)
     }
@@ -123,7 +118,6 @@ pub fn create_delivery_job_with_due_date(id: &str, location: (f64, f64), due_dat
             demand: Some(vec![1]),
             order: None,
             due_date: Some(due_date.to_string()),
-
         }]),
         ..create_job(id)
     }
@@ -169,7 +163,6 @@ pub fn create_pickup_delivery_job_with_params(
             demand: Some(demand.clone()),
             order: None,
             due_date: None,
-
         }]),
         deliveries: Some(vec![JobTask {
             places: vec![JobPlace {
@@ -180,7 +173,6 @@ pub fn create_pickup_delivery_job_with_params(
             demand: Some(demand),
             order: None,
             due_date: None,
-
         }]),
 
         ..create_job(id)
@@ -194,7 +186,6 @@ pub fn create_delivery_job_with_index(id: &str, index: usize) -> Job {
             demand: Some(vec![1]),
             order: None,
             due_date: None,
-
         }]),
         ..create_job(id)
     }
@@ -217,7 +208,6 @@ pub fn create_multi_job(
                 demand: Some(demand),
                 order: None,
                 due_date: None,
-    
             })
             .collect::<Vec<_>>();
 
@@ -242,7 +232,7 @@ pub fn create_default_open_vehicle_shift() -> VehicleShift {
         breaks: None,
         reloads: None,
         recharges: None,
-                        job_times: None,
+        job_times: None,
     }
 }
 
@@ -253,7 +243,7 @@ pub fn create_default_vehicle_shift_with_locations(start: (f64, f64), end: (f64,
         breaks: None,
         reloads: None,
         recharges: None,
-                        job_times: None,
+        job_times: None,
     }
 }
 

@@ -147,7 +147,6 @@ fn can_handle_order_between_special_activities() {
             demand: Some(vec![1]),
             order: Some(order),
             due_date: None,
-
         }]),
         ..create_job(id)
     };

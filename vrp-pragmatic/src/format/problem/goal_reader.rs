@@ -243,9 +243,7 @@ fn get_objective_feature_layer(
                 // High penalty for unassigned jobs that have a due date
                 let has_due_date = match job {
                     CoreJob::Single(single) => single.dimens.get_job_due_date().is_some(),
-                    CoreJob::Multi(multi) => {
-                        multi.jobs.iter().any(|single| single.dimens.get_job_due_date().is_some())
-                    }
+                    CoreJob::Multi(multi) => multi.jobs.iter().any(|single| single.dimens.get_job_due_date().is_some()),
                 };
                 if has_due_date { 10000.0 } else { 0.0 }
             })

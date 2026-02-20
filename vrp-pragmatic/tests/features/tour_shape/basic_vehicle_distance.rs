@@ -34,11 +34,7 @@ fn can_assign_jobs_to_nearest_vehicle() {
             ],
             ..create_default_fleet()
         },
-        objectives: Some(vec![
-            MinimizeUnassigned { breaks: None },
-            MinimizeVehicleDistance,
-            MinimizeCost,
-        ]),
+        objectives: Some(vec![MinimizeUnassigned { breaks: None }, MinimizeVehicleDistance, MinimizeCost]),
     };
     let matrix = create_matrix_from_problem(&problem);
 
@@ -70,21 +66,15 @@ fn can_assign_jobs_to_nearest_vehicle() {
 
 /// Computes the total "excess distance" for a solution: for each job, how much farther
 /// is the assigned vehicle compared to the nearest vehicle.
-fn compute_excess_distance(
-    solution: &crate::format::solution::Solution,
-    vehicle_starts: &[(&str, (f64, f64))],
-) -> f64 {
+fn compute_excess_distance(solution: &crate::format::solution::Solution, vehicle_starts: &[(&str, (f64, f64))]) -> f64 {
     let dist = |a: (f64, f64), b: (f64, f64)| ((a.0 - b.0).powi(2) + (a.1 - b.1).powi(2)).sqrt();
 
     let mut total_excess = 0.0;
     let mut job_count = 0;
 
     for tour in &solution.tours {
-        let vehicle_start = vehicle_starts
-            .iter()
-            .find(|(vid, _)| *vid == tour.vehicle_id)
-            .map(|(_, loc)| *loc)
-            .unwrap();
+        let vehicle_start =
+            vehicle_starts.iter().find(|(vid, _)| *vid == tour.vehicle_id).map(|(_, loc)| *loc).unwrap();
 
         for stop in &tour.stops {
             let Some(stop_loc) = stop.location().map(|l| l.to_lat_lng()) else { continue };
@@ -133,13 +123,8 @@ fn can_reduce_vehicle_distance_with_many_jobs() {
         })
         .collect();
 
-    let vehicle_starts: Vec<(&str, (f64, f64))> = vec![
-        ("v0_1", (0., 0.)),
-        ("v1_1", (20., 0.)),
-        ("v2_1", (40., 0.)),
-        ("v3_1", (60., 0.)),
-        ("v4_1", (80., 0.)),
-    ];
+    let vehicle_starts: Vec<(&str, (f64, f64))> =
+        vec![("v0_1", (0., 0.)), ("v1_1", (20., 0.)), ("v2_1", (40., 0.)), ("v3_1", (60., 0.)), ("v4_1", (80., 0.))];
 
     // --- Solve WITHOUT MinimizeVehicleDistance ---
     let problem_without = Problem {
@@ -148,18 +133,13 @@ fn can_reduce_vehicle_distance_with_many_jobs() {
         objectives: Some(vec![MinimizeUnassigned { breaks: None }, MinimizeTours, MinimizeCost]),
     };
     let matrix_without = create_matrix_from_problem(&problem_without);
-    let solution_without =
-        solve_with_metaheuristic_and_iterations(problem_without, Some(vec![matrix_without]), 500);
+    let solution_without = solve_with_metaheuristic_and_iterations(problem_without, Some(vec![matrix_without]), 500);
 
     // --- Solve WITH MinimizeVehicleDistance ---
     let problem_with = Problem {
         plan: Plan { jobs, ..create_empty_plan() },
         fleet: Fleet { vehicles, ..create_default_fleet() },
-        objectives: Some(vec![
-            MinimizeUnassigned { breaks: None },
-            MinimizeVehicleDistance,
-            MinimizeCost,
-        ]),
+        objectives: Some(vec![MinimizeUnassigned { breaks: None }, MinimizeVehicleDistance, MinimizeCost]),
     };
     let matrix_with = create_matrix_from_problem(&problem_with);
     let solution_with = solve_with_metaheuristic_and_iterations(problem_with, Some(vec![matrix_with]), 500);

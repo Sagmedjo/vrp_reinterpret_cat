@@ -1,6 +1,6 @@
 use crate::format::problem::*;
-use crate::helpers::*;
 use crate::format_time;
+use crate::helpers::*;
 
 /// Tests that jobs with earlier due dates are preferred when using minimize-overdue objective.
 #[test]
@@ -87,10 +87,7 @@ fn can_calculate_overdue_for_late_job() {
     // Job should be assigned (we minimize unassigned first)
     assert_eq!(solution.tours.len(), 1);
     // Verify the job is in the tour
-    assert!(solution.tours[0]
-        .stops
-        .iter()
-        .any(|stop| stop.activities().iter().any(|a| a.job_id == "job1")));
+    assert!(solution.tours[0].stops.iter().any(|stop| stop.activities().iter().any(|a| a.job_id == "job1")));
 }
 
 /// Tests that jobs without due dates don't contribute to overdue cost.
@@ -99,15 +96,12 @@ fn can_handle_jobs_without_due_date() {
     let problem = Problem {
         plan: Plan {
             jobs: vec![
-                create_delivery_job("job1", (1., 0.)),                                    // No due date
+                create_delivery_job("job1", (1., 0.)), // No due date
                 create_delivery_job_with_due_date("job2", (2., 0.), &format_time(1000.)), // Has due date
             ],
             ..create_empty_plan()
         },
-        fleet: Fleet {
-            vehicles: vec![create_default_vehicle_type()],
-            ..create_default_fleet()
-        },
+        fleet: Fleet { vehicles: vec![create_default_vehicle_type()], ..create_default_fleet() },
         objectives: Some(vec![
             Objective::MinimizeUnassigned { breaks: None },
             Objective::MinimizeOverdue,
@@ -140,24 +134,12 @@ fn can_prefer_earlier_shift_to_minimize_overdue() {
             vehicles: vec![VehicleType {
                 shifts: vec![
                     VehicleShift {
-                        start: ShiftStart {
-                            earliest: format_time(0.),
-                            latest: None,
-                            location: (0., 0.).to_loc(),
-                        },
-                        end: Some(ShiftEnd {
-                            earliest: None,
-                            latest: format_time(100.),
-                            location: (0., 0.).to_loc(),
-                        }),
+                        start: ShiftStart { earliest: format_time(0.), latest: None, location: (0., 0.).to_loc() },
+                        end: Some(ShiftEnd { earliest: None, latest: format_time(100.), location: (0., 0.).to_loc() }),
                         ..create_default_vehicle_shift()
                     },
                     VehicleShift {
-                        start: ShiftStart {
-                            earliest: format_time(86400.),
-                            latest: None,
-                            location: (0., 0.).to_loc(),
-                        },
+                        start: ShiftStart { earliest: format_time(86400.), latest: None, location: (0., 0.).to_loc() },
                         end: Some(ShiftEnd {
                             earliest: None,
                             latest: format_time(172800.),

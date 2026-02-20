@@ -286,3 +286,70 @@ fn can_keep_activity_time_when_break_starts_at_activity_end_on_point_stop() {
     assert!((break_end - 8.).abs() < 1e-9, "unexpected break end: {break_end}, tour: {tour:?}");
     assert!(job1_end <= break_start + 1e-9, "job1 overlaps break at boundary, tour: {tour:?}");
 }
+
+#[test]
+fn can_align_break_to_activity_boundary_when_reserved_time_hits_mid_service() {
+    let (problem, mut coord_index) = create_test_problem_and_coord_index();
+    coord_index.add(&Location::Reference { index: 1 });
+
+    let create_delivery_with_duration = |id: &str, location: usize, duration: f64| {
+        let mut single = Arc::try_unwrap(create_single(id)).unwrap_or_else(|_| unreachable!());
+        let place = single.places.first_mut().expect("place");
+        place.location = Some(location);
+        place.duration = duration;
+        Arc::new(single)
+    };
+
+    let activities = vec![{
+        let mut activity = create_activity_with_job_at_location(create_delivery_with_duration("job1", 1, 3.), 1);
+        // Service duration is 3. Route departure includes extra break duration.
+        activity.schedule = DomainSchedule { arrival: 5., departure: 10. };
+        activity.place.duration = 3.;
+        activity
+    }];
+    let mut route = create_route_with_activities(&problem.fleet, "v1", activities);
+    route.tour.all_activities_mut().last().expect("last activity").schedule.arrival = 15.;
+    let reserved_times_index = vec![(
+        route.actor.clone(),
+        vec![ReservedTimeSpan {
+            // Break time [7..9] intersects service interval [5..8] and should be aligned to [8..10].
+            time: TimeSpan::Window(TimeWindow::new(7., 7.)),
+            duration: 2.,
+        }],
+    )]
+    .into_iter()
+    .collect();
+
+    let tour = create_tour(&problem, &route, &coord_index, &reserved_times_index);
+
+    let stop = tour
+        .stops
+        .iter()
+        .find(|stop| {
+            stop.activities().iter().any(|activity| activity.job_id == "job1")
+                && stop.activities().iter().any(|activity| activity.activity_type == "break")
+        })
+        .expect("expected to find job1 and break at same stop");
+
+    let job =
+        stop.activities().iter().find(|activity| activity.job_id == "job1").expect("expected to find job1 activity");
+    let brk = stop
+        .activities()
+        .iter()
+        .find(|activity| activity.activity_type == "break")
+        .expect("expected to find break activity");
+
+    let job_time = job.time.as_ref().expect("expected job time");
+    let break_time = brk.time.as_ref().expect("expected break time");
+    let job_start = parse_time(&job_time.start);
+    let job_end = parse_time(&job_time.end);
+    let break_start = parse_time(&break_time.start);
+    let break_end = parse_time(&break_time.end);
+
+    assert!((job_start - 5.).abs() < 1e-9, "unexpected job start: {job_start}, tour: {tour:?}");
+    assert!((job_end - 8.).abs() < 1e-9, "unexpected job end: {job_end}, tour: {tour:?}");
+    assert!((job_end - job_start - 3.).abs() < 1e-9, "job duration changed, tour: {tour:?}");
+    assert!((break_start - 8.).abs() < 1e-9, "unexpected break start: {break_start}, tour: {tour:?}");
+    assert!((break_end - 10.).abs() < 1e-9, "unexpected break end: {break_end}, tour: {tour:?}");
+    assert!(job_end <= break_start + 1e-9, "job overlaps break, tour: {tour:?}");
+}

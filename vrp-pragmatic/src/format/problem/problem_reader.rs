@@ -158,11 +158,8 @@ fn get_problem_properties(api_problem: &ApiProblem, matrices: &[Matrix]) -> Prob
 
     let has_min_vehicle_shifts = api_problem.fleet.vehicles.iter().any(|vehicle| vehicle.min_shifts.is_some());
 
-    let has_job_time_constraints = api_problem
-        .fleet
-        .vehicles
-        .iter()
-        .any(|v| v.shifts.iter().any(|s| s.job_times.is_some()));
+    let has_job_time_constraints =
+        api_problem.fleet.vehicles.iter().any(|v| v.shifts.iter().any(|s| s.job_times.is_some()));
 
     ProblemProperties {
         has_multi_dimen_capacity,

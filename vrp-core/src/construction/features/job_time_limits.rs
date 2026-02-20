@@ -93,11 +93,7 @@ impl JobTimeLimitsConstraint {
                 // Calculate when we would depart from this job
                 let actual_arr_time = if let Some(earliest_first) = constraints.earliest_first {
                     let is_first_job = prev.job.is_none() && activity_ctx.index == 0;
-                    if is_first_job {
-                        arr_time_at_target.max(earliest_first)
-                    } else {
-                        arr_time_at_target
-                    }
+                    if is_first_job { arr_time_at_target.max(earliest_first) } else { arr_time_at_target }
                 } else {
                     arr_time_at_target
                 };
@@ -125,9 +121,7 @@ impl FeatureConstraint for JobTimeLimitsConstraint {
     fn evaluate(&self, move_ctx: &MoveContext<'_>) -> Option<ConstraintViolation> {
         match move_ctx {
             MoveContext::Route { .. } => None,
-            MoveContext::Activity { route_ctx, activity_ctx, .. } => {
-                self.evaluate_activity(route_ctx, activity_ctx)
-            }
+            MoveContext::Activity { route_ctx, activity_ctx, .. } => self.evaluate_activity(route_ctx, activity_ctx),
         }
     }
 

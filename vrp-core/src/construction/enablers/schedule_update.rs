@@ -118,9 +118,11 @@ fn recompute_offset_time_windows(route_ctx: &mut RouteContext, old_anchor: Times
         let Some(place_def) = job.places.get(place_idx) else { return };
 
         // Only adjust activities whose selected time window came from an offset span.
-        let Some(span) = place_def.times.iter().find(|span| {
-            matches!(span, TimeSpan::Offset(_)) && span.to_time_window(old_anchor) == activity.place.time
-        }) else {
+        let Some(span) = place_def
+            .times
+            .iter()
+            .find(|span| matches!(span, TimeSpan::Offset(_)) && span.to_time_window(old_anchor) == activity.place.time)
+        else {
             return;
         };
 

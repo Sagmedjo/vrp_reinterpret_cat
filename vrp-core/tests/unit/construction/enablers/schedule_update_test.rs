@@ -349,10 +349,7 @@ fn create_feasibility_detail(
             location: start_loc,
             time: TimeInterval { earliest: Some(time_start), latest: None },
         }),
-        end: Some(VehiclePlace {
-            location: end_loc,
-            time: TimeInterval { earliest: None, latest: Some(time_end) },
-        }),
+        end: Some(VehiclePlace { location: end_loc, time: TimeInterval { earliest: None, latest: Some(time_end) } }),
     }
 }
 
@@ -390,10 +387,8 @@ fn create_feasibility_route(
 fn is_schedule_feasible_returns_true_for_feasible_route_with_reserved_time() {
     // Reserved time at t=25, duration=5. Activity at loc=10, tw=(0,100), dur=10.
     // Activity arrives at 10, departs at 20. Reserved time at 25 doesn't cause Break.
-    let reserved_time =
-        ReservedTimeSpan { time: TimeSpan::Window(TimeWindow::new(25., 25.)), duration: 5. };
-    let (activity_cost, transport, route_ctx) =
-        create_feasibility_route(reserved_time, vec![(10, (0., 100.), 10.)]);
+    let reserved_time = ReservedTimeSpan { time: TimeSpan::Window(TimeWindow::new(25., 25.)), duration: 5. };
+    let (activity_cost, transport, route_ctx) = create_feasibility_route(reserved_time, vec![(10, (0., 100.), 10.)]);
 
     assert!(is_schedule_feasible(route_ctx.route(), activity_cost.as_ref(), transport.as_ref()));
 }
@@ -412,8 +407,7 @@ fn is_schedule_feasible_returns_false_when_break_exceeds_activity_tw() {
     let fleet = FleetBuilder::default().add_driver(test_driver()).add_vehicle(vehicle).build();
     let actor = fleet.actors.first().unwrap().clone();
 
-    let reserved_time =
-        ReservedTimeSpan { time: TimeSpan::Window(TimeWindow::new(9., 9.)), duration: 12. };
+    let reserved_time = ReservedTimeSpan { time: TimeSpan::Window(TimeWindow::new(9., 9.)), duration: 12. };
     let reserved_times_idx =
         vec![(actor.clone(), vec![reserved_time])].into_iter().collect::<std::collections::HashMap<_, _>>();
 

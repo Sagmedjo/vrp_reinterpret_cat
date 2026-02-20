@@ -3,9 +3,9 @@
 mod vehicles_test;
 
 use super::*;
+use crate::parse_time_safe;
 use crate::utils::combine_error_results;
 use crate::validation::common::get_time_windows;
-use crate::parse_time_safe;
 use std::collections::HashSet;
 use vrp_core::models::common::TimeWindow;
 

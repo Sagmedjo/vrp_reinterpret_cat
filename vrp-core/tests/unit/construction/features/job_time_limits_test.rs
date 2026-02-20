@@ -18,16 +18,10 @@ fn create_feature() -> Feature {
     .unwrap()
 }
 
-fn create_fleet_with_job_time_constraints(
-    id: &str,
-    earliest_first: Option<f64>,
-    latest_last: Option<f64>,
-) -> Fleet {
+fn create_fleet_with_job_time_constraints(id: &str, earliest_first: Option<f64>, latest_last: Option<f64>) -> Fleet {
     let mut builder = TestVehicleBuilder::default();
     builder.id(id);
-    builder
-        .dimens_mut()
-        .set_job_time_constraints(JobTimeConstraints { earliest_first, latest_last });
+    builder.dimens_mut().set_job_time_constraints(JobTimeConstraints { earliest_first, latest_last });
 
     FleetBuilder::default().add_driver(test_driver()).add_vehicle(builder.build()).build()
 }
@@ -123,7 +117,6 @@ mod earliest_first_constraint {
 
         assert_eq!(result, ConstraintViolation::skip(VIOLATION_CODE));
     }
-
 }
 
 mod latest_last_constraint {

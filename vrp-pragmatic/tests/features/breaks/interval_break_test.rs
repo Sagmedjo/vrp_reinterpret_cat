@@ -117,7 +117,7 @@ fn can_assign_interval_break_with_reload() {
                         ..create_default_reload()
                     }]),
                     recharges: None,
-                        job_times: None,
+                    job_times: None,
                 }],
                 capacity: vec![2],
                 ..create_default_vehicle_type()

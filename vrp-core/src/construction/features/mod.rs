@@ -54,7 +54,9 @@ mod reloads;
 pub use self::reloads::{ReloadFeatureFactory, ReloadIntervalsTourState, SharedResource, SharedResourceId};
 
 mod skills;
-pub use self::skills::{JobSkills, JobSkillsDimension, VehicleSkillsDimension, create_skills_feature, is_job_skills_compatible};
+pub use self::skills::{
+    JobSkills, JobSkillsDimension, VehicleSkillsDimension, create_skills_feature, is_job_skills_compatible,
+};
 
 mod total_value;
 pub use self::total_value::*;

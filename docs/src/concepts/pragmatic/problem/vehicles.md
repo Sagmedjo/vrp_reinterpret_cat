@@ -92,6 +92,9 @@ Each shift can have the following properties:
   - **required**: this break is guaranteed to be assigned at cost of flexibility. It has the following properties:
     - `time` (required): a fixed time or time offset interval when the break should happen specified by `earliest` and `latest` properties.
       The break will be assigned not earlier, and not later than the range specified.
+      For `OffsetTime` breaks, the offset is relative to the route cost span anchor: for `depot-to-depot` and
+      `depot-to-last-job` spans, the anchor is the departure time; for `first-job-to-depot` and `first-job-to-last-job`
+      spans, the anchor is the first job's arrival time. Flexible start times are supported.
     - `duration` (required): duration of the break
   - **optional**: although such break is not guaranteed for assignment, it has some advantages over required break:
     - arbitrary break location is supported

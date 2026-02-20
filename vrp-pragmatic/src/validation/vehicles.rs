@@ -5,7 +5,7 @@ mod vehicles_test;
 use super::*;
 use crate::utils::combine_error_results;
 use crate::validation::common::get_time_windows;
-use crate::{parse_time, parse_time_safe};
+use crate::parse_time_safe;
 use std::collections::HashSet;
 use vrp_core::models::common::TimeWindow;
 
@@ -73,18 +73,26 @@ fn check_e1303_vehicle_breaks_time_is_correct(ctx: &ValidationContext) -> Result
                 .breaks
                 .as_ref()
                 .map(|breaks| {
+                    // OffsetTime breaks: only structural validation (no absolute time computation
+                    // against shift start, since the actual anchor is unknown at validation time)
+                    let offset_valid = breaks.iter().all(|b| match b {
+                        VehicleBreak::Required {
+                            time: VehicleRequiredBreakTime::OffsetTime { earliest, latest },
+                            duration,
+                        } => *earliest >= 0. && *latest >= 0. && *earliest <= *latest && *duration > 0.,
+                        _ => true,
+                    });
+
+                    if !offset_valid {
+                        return false;
+                    }
+
+                    // ExactTime and optional breaks: validate against shift time windows as before
                     let tws = breaks
                         .iter()
                         .filter_map(|b| match b {
                             VehicleBreak::Optional { time: VehicleOptionalBreakTime::TimeWindow(tw), .. } => {
                                 Some(get_time_window_from_vec(tw))
-                            }
-                            VehicleBreak::Required {
-                                time: VehicleRequiredBreakTime::OffsetTime { earliest, latest },
-                                duration,
-                            } => {
-                                let departure = parse_time(&shift.start.earliest);
-                                Some(Some(TimeWindow::new(departure + *earliest, departure + *latest + *duration)))
                             }
                             VehicleBreak::Required {
                                 time: VehicleRequiredBreakTime::ExactTime { earliest, latest },

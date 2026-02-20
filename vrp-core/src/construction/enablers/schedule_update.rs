@@ -9,6 +9,7 @@ use crate::models::problem::{ActivityCost, RouteCostSpan, RouteCostSpanDimension
 use crate::models::solution::{Activity, Route};
 use rosomaxa::prelude::Float;
 use rosomaxa::utils::UnwrapValue;
+use std::ops::ControlFlow;
 
 custom_activity_state!(pub(crate) LatestArrival typeof Timestamp);
 custom_activity_state!(pub(crate) WaitingTime typeof Timestamp);
@@ -18,9 +19,70 @@ custom_tour_state!(pub(crate) LimitDuration typeof Duration);
 
 /// Updates route schedule data.
 pub fn update_route_schedule(route_ctx: &mut RouteContext, activity: &dyn ActivityCost, transport: &dyn TransportCost) {
+    let cost_span = route_ctx.route().actor.vehicle.dimens.get_route_cost_span().copied().unwrap_or_default();
+    let needs_fixed_point = matches!(cost_span, RouteCostSpan::FirstJobToDepot | RouteCostSpan::FirstJobToLastJob);
+
     update_schedules(route_ctx, activity, transport);
+
+    if needs_fixed_point {
+        // For FirstJobTo* spans, the offset anchor depends on first_job.arrival which is
+        // computed during update_schedules. Re-run if the anchor changed significantly.
+        const EPSILON: f64 = 1e-6;
+        const MAX_ITERATIONS: usize = 3;
+
+        for _ in 0..MAX_ITERATIONS {
+            let anchor = get_offset_anchor(route_ctx.route());
+            update_schedules(route_ctx, activity, transport);
+            let new_anchor = get_offset_anchor(route_ctx.route());
+
+            if (new_anchor - anchor).abs() <= EPSILON {
+                break;
+            }
+        }
+    }
+
     update_states(route_ctx, activity, transport);
     update_statistics(route_ctx, transport);
+}
+
+/// Returns the offset anchor timestamp based on the route's `RouteCostSpan`.
+/// For `DepotToDepot`/`DepotToLastJob`, this is the start departure time.
+/// For `FirstJobToDepot`/`FirstJobToLastJob`, this is the first job's arrival time (if available).
+pub fn get_offset_anchor(route: &Route) -> Timestamp {
+    let cost_span = route.actor.vehicle.dimens.get_route_cost_span().copied().unwrap_or_default();
+    let start_departure = route.tour.start().map(|a| a.schedule.departure).unwrap_or(0.);
+
+    match cost_span {
+        RouteCostSpan::DepotToDepot | RouteCostSpan::DepotToLastJob => start_departure,
+        RouteCostSpan::FirstJobToDepot | RouteCostSpan::FirstJobToLastJob => {
+            // First job is at index 1 (after start depot)
+            route.tour.get(1).filter(|a| a.job.is_some()).map(|a| a.schedule.arrival).unwrap_or(start_departure)
+        }
+    }
+}
+
+/// Checks whether the route schedule is feasible by simulating the forward pass of `update_schedules`.
+/// Returns `true` if no activity produces a `ControlFlow::Break` during departure estimation.
+pub fn is_schedule_feasible(route: &Route, activity: &dyn ActivityCost, transport: &dyn TransportCost) -> bool {
+    let start = route.tour.start().expect(OP_START_MSG);
+    let mut loc = start.place.location;
+    let mut dep = start.schedule.departure;
+
+    for activity_idx in 1..route.tour.total() {
+        let a = route.tour.get(activity_idx).unwrap();
+        let location = a.place.location;
+        let arrival = dep + transport.duration(route, loc, location, TravelTime::Departure(dep));
+
+        match activity.estimate_departure(route, a, arrival) {
+            ControlFlow::Break(_) => return false,
+            ControlFlow::Continue(d) => {
+                loc = location;
+                dep = d;
+            }
+        }
+    }
+
+    true
 }
 
 /// Updates route departure to the new one.
@@ -30,26 +92,22 @@ pub fn update_route_departure(
     transport: &dyn TransportCost,
     new_departure_time: Timestamp,
 ) {
-    let start = route_ctx.route().tour.get(0).unwrap();
-    let old_departure_time = start.schedule.departure;
+    let old_anchor = get_offset_anchor(route_ctx.route());
 
     {
         let start = route_ctx.route_mut().tour.get_mut(0).unwrap();
         start.schedule.departure = new_departure_time;
     }
 
-    recompute_offset_time_windows(route_ctx, old_departure_time, new_departure_time);
+    let new_anchor = get_offset_anchor(route_ctx.route());
+    recompute_offset_time_windows(route_ctx, old_anchor, new_anchor);
 
     update_route_schedule(route_ctx, activity, transport);
 }
 
-/// Recomputes activity time windows derived from offset spans after departure shift.
-fn recompute_offset_time_windows(
-    route_ctx: &mut RouteContext,
-    old_departure_time: Timestamp,
-    new_departure_time: Timestamp,
-) {
-    if old_departure_time == new_departure_time {
+/// Recomputes activity time windows derived from offset spans after anchor shift.
+fn recompute_offset_time_windows(route_ctx: &mut RouteContext, old_anchor: Timestamp, new_anchor: Timestamp) {
+    if old_anchor == new_anchor {
         return;
     }
 
@@ -61,12 +119,12 @@ fn recompute_offset_time_windows(
 
         // Only adjust activities whose selected time window came from an offset span.
         let Some(span) = place_def.times.iter().find(|span| {
-            matches!(span, TimeSpan::Offset(_)) && span.to_time_window(old_departure_time) == activity.place.time
+            matches!(span, TimeSpan::Offset(_)) && span.to_time_window(old_anchor) == activity.place.time
         }) else {
             return;
         };
 
-        activity.place.time = span.to_time_window(new_departure_time);
+        activity.place.time = span.to_time_window(new_anchor);
     });
 }
 

@@ -2,6 +2,7 @@ use crate::format::problem::*;
 use crate::format::solution::solution_writer::create_tour;
 use crate::format::solution::*;
 use crate::helpers::*;
+use crate::parse_time;
 use std::sync::Arc;
 use vrp_core::construction::enablers::ReservedTimeSpan;
 use vrp_core::models::common::{TimeSpan, TimeWindow};
@@ -207,4 +208,81 @@ fn can_merge_required_break_on_stop_arrival_time_properly() {
 
     assert_eq!(tour.stops.len(), 3);
     assert_eq!(get_ids_from_tour(&tour).into_iter().flatten().filter(|id| id == "break").count(), 1);
+}
+
+#[test]
+fn can_keep_activity_time_when_break_starts_at_activity_end_on_point_stop() {
+    let (problem, mut coord_index) = create_test_problem_and_coord_index();
+    coord_index.add(&Location::Reference { index: 1 });
+    coord_index.add(&Location::Reference { index: 2 });
+
+    let create_delivery_with_duration = |id: &str, location: usize| {
+        let mut single = Arc::try_unwrap(create_single(id)).unwrap_or_else(|_| unreachable!());
+        single.places.first_mut().expect("place").location = Some(location);
+        single.places.first_mut().expect("place").duration = 1.;
+        Arc::new(single)
+    };
+
+    let activities = vec![
+        {
+            let mut activity = create_activity_with_job_at_location(create_delivery_with_duration("job1", 1), 1);
+            // One unit service [5..6], with waiting until departure at 8.
+            activity.schedule = DomainSchedule { arrival: 5., departure: 8. };
+            activity.place.duration = 1.;
+            activity
+        },
+        {
+            let mut activity = create_activity_with_job_at_location(create_delivery_with_duration("job2", 2), 2);
+            activity.schedule = DomainSchedule { arrival: 15., departure: 16. };
+            activity.place.duration = 1.;
+            activity
+        },
+    ];
+    let mut route = create_route_with_activities(&problem.fleet, "v1", activities);
+    route.tour.all_activities_mut().last().expect("last activity").schedule.arrival = 16.;
+    let reserved_times_index = vec![(
+        route.actor.clone(),
+        vec![ReservedTimeSpan {
+            // Break should be inserted as [6..8], touching job1 end boundary at 6.
+            time: TimeSpan::Window(TimeWindow::new(5., 6.)),
+            duration: 2.,
+        }],
+    )]
+    .into_iter()
+    .collect();
+
+    let tour = create_tour(&problem, &route, &coord_index, &reserved_times_index);
+
+    let break_count = get_ids_from_tour(&tour).into_iter().flatten().filter(|id| id == "break").count();
+    assert_eq!(break_count, 1, "expected exactly one break, got {break_count}, tour: {tour:?}");
+
+    let job1_stop = tour
+        .stops
+        .iter()
+        .find(|stop| stop.activities().iter().any(|activity| activity.job_id == "job1"))
+        .expect("expected to find stop with job1");
+    let job1_activity = job1_stop
+        .activities()
+        .iter()
+        .find(|activity| activity.job_id == "job1")
+        .expect("expected to find job1 activity");
+    let break_activity = job1_stop
+        .activities()
+        .iter()
+        .find(|activity| activity.activity_type == "break")
+        .expect("expected break at same stop as job1");
+
+    let job1_time = job1_activity.time.as_ref().expect("expected job1 time");
+    let break_time = break_activity.time.as_ref().expect("expected break time");
+    let job1_start = parse_time(&job1_time.start);
+    let job1_end = parse_time(&job1_time.end);
+    let break_start = parse_time(&break_time.start);
+    let break_end = parse_time(&break_time.end);
+
+    assert!((job1_start - 5.).abs() < 1e-9, "unexpected job1 start: {job1_start}, tour: {tour:?}");
+    assert!((job1_end - 6.).abs() < 1e-9, "unexpected job1 end: {job1_end}, tour: {tour:?}");
+    assert!((job1_end - job1_start - 1.).abs() < 1e-9, "job1 duration changed, tour: {tour:?}");
+    assert!((break_start - 6.).abs() < 1e-9, "unexpected break start: {break_start}, tour: {tour:?}");
+    assert!((break_end - 8.).abs() < 1e-9, "unexpected break end: {break_end}, tour: {tour:?}");
+    assert!(job1_end <= break_start + 1e-9, "job1 overlaps break at boundary, tour: {tour:?}");
 }

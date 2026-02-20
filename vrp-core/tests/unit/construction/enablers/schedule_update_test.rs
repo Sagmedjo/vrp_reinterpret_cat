@@ -1,9 +1,12 @@
 use super::*;
-use crate::construction::enablers::{TotalDistanceTourState, TotalDurationTourState};
+use crate::construction::enablers::{
+    DynamicActivityCost, DynamicTransportCost, ReservedTimeSpan, TotalDistanceTourState, TotalDurationTourState,
+};
 use crate::helpers::models::problem::*;
 use crate::helpers::models::solution::*;
-use crate::models::common::{Location, Schedule, TimeInterval, Timestamp};
+use crate::models::common::{Location, Schedule, TimeInterval, TimeSpan, TimeWindow, Timestamp};
 use crate::models::problem::{RouteCostSpan, RouteCostSpanDimension, VehicleDetail, VehiclePlace};
+use std::sync::Arc;
 
 fn create_detail(start_loc: Location, end_loc: Location) -> VehicleDetail {
     VehicleDetail {
@@ -333,4 +336,95 @@ fn can_calculate_statistics_for_open_vrp_with_first_job_to_last_job_span() {
     assert_eq!(total_distance, 50., "Open VRP FirstJobToLastJob distance should be 50");
     // Duration: last_job.departure(60) - first_job.arrival(10) = 50
     assert_eq!(total_duration, 50., "Open VRP FirstJobToLastJob duration should be 50");
+}
+
+fn create_feasibility_detail(
+    start_loc: Location,
+    end_loc: Location,
+    time_start: Timestamp,
+    time_end: Timestamp,
+) -> VehicleDetail {
+    VehicleDetail {
+        start: Some(VehiclePlace {
+            location: start_loc,
+            time: TimeInterval { earliest: Some(time_start), latest: None },
+        }),
+        end: Some(VehiclePlace {
+            location: end_loc,
+            time: TimeInterval { earliest: None, latest: Some(time_end) },
+        }),
+    }
+}
+
+fn create_feasibility_route(
+    reserved_time: ReservedTimeSpan,
+    activities: Vec<(Location, (Timestamp, Timestamp), f64)>,
+) -> (Arc<dyn crate::models::problem::ActivityCost>, Arc<dyn crate::models::problem::TransportCost>, RouteContext) {
+    let detail = create_feasibility_detail(0, 0, 0., 100.);
+    let vehicle = TestVehicleBuilder::default().id("v1").details(vec![detail]).build();
+    let fleet = FleetBuilder::default().add_driver(test_driver()).add_vehicle(vehicle).build();
+    let actor = fleet.actors.first().unwrap().clone();
+
+    let reserved_times_idx =
+        vec![(actor.clone(), vec![reserved_time])].into_iter().collect::<std::collections::HashMap<_, _>>();
+
+    let activity_cost: Arc<dyn crate::models::problem::ActivityCost> =
+        Arc::new(DynamicActivityCost::new(reserved_times_idx.clone()).unwrap());
+    let transport: Arc<dyn crate::models::problem::TransportCost> =
+        Arc::new(DynamicTransportCost::new(reserved_times_idx, Arc::new(TestTransportCost::default())).unwrap());
+
+    let acts = activities.into_iter().map(|(loc, (start, end), dur)| {
+        ActivityBuilder::with_location_tw_and_duration(loc, TimeWindow::new(start, end), dur).build()
+    });
+
+    let mut route_ctx = RouteContextBuilder::default()
+        .with_route(RouteBuilder::default().with_vehicle(&fleet, "v1").add_activities(acts).build())
+        .build();
+
+    update_route_schedule(&mut route_ctx, activity_cost.as_ref(), transport.as_ref());
+
+    (activity_cost, transport, route_ctx)
+}
+
+#[test]
+fn is_schedule_feasible_returns_true_for_feasible_route_with_reserved_time() {
+    // Reserved time at t=25, duration=5. Activity at loc=10, tw=(0,100), dur=10.
+    // Activity arrives at 10, departs at 20. Reserved time at 25 doesn't cause Break.
+    let reserved_time =
+        ReservedTimeSpan { time: TimeSpan::Window(TimeWindow::new(25., 25.)), duration: 5. };
+    let (activity_cost, transport, route_ctx) =
+        create_feasibility_route(reserved_time, vec![(10, (0., 100.), 10.)]);
+
+    assert!(is_schedule_feasible(route_ctx.route(), activity_cost.as_ref(), transport.as_ref()));
+}
+
+#[test]
+fn is_schedule_feasible_returns_false_when_break_exceeds_activity_tw() {
+    // Reserved time at t=9, duration=12 means break runs from 9 to 21.
+    // Activity at loc=10, tw=(0,20), dur=10. With plain transport, arrival=10.
+    // estimate_departure: activity_start=10, departure=20, schedule=(10,20)
+    // reserved time intersects, extra_duration=12, 10+12=22 > 20 → Break
+    //
+    // We use DynamicActivityCost (has reserved times) but plain TestTransportCost
+    // (no reserved time in transport) so that arrival is 10, not shifted.
+    let detail = create_feasibility_detail(0, 0, 0., 100.);
+    let vehicle = TestVehicleBuilder::default().id("v1").details(vec![detail]).build();
+    let fleet = FleetBuilder::default().add_driver(test_driver()).add_vehicle(vehicle).build();
+    let actor = fleet.actors.first().unwrap().clone();
+
+    let reserved_time =
+        ReservedTimeSpan { time: TimeSpan::Window(TimeWindow::new(9., 9.)), duration: 12. };
+    let reserved_times_idx =
+        vec![(actor.clone(), vec![reserved_time])].into_iter().collect::<std::collections::HashMap<_, _>>();
+
+    let activity_cost: Arc<dyn crate::models::problem::ActivityCost> =
+        Arc::new(DynamicActivityCost::new(reserved_times_idx).unwrap());
+    let transport = TestTransportCost::default();
+
+    let acts = vec![ActivityBuilder::with_location_tw_and_duration(10, TimeWindow::new(0., 20.), 10.).build()];
+    let route_ctx = RouteContextBuilder::default()
+        .with_route(RouteBuilder::default().with_vehicle(&fleet, "v1").add_activities(acts.into_iter()).build())
+        .build();
+
+    assert!(!is_schedule_feasible(route_ctx.route(), activity_cost.as_ref(), &transport));
 }

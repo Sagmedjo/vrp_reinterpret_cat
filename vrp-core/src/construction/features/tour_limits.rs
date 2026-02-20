@@ -110,14 +110,13 @@ impl FeatureObjective for MinActivityLimitObjective {
         solution.solution.routes.iter().fold(0., |acc, route_ctx| {
             let activity_count = route_ctx.route().tour.job_activity_count();
             // Only penalize non-empty routes
-            if activity_count > 0 {
-                if let Some(min_limit) = (self.min_limit_fn)(route_ctx.route().actor.as_ref()) {
-                    if activity_count < min_limit {
-                        // Penalty proportional to how far below the minimum we are
-                        let deficit = (min_limit - activity_count) as Cost;
-                        return acc + deficit;
-                    }
-                }
+            if activity_count > 0
+                && let Some(min_limit) = (self.min_limit_fn)(route_ctx.route().actor.as_ref())
+                && activity_count < min_limit
+            {
+                // Penalty proportional to how far below the minimum we are
+                let deficit = (min_limit - activity_count) as Cost;
+                return acc + deficit;
             }
             acc
         })

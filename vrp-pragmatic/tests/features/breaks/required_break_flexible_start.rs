@@ -7,7 +7,6 @@ use crate::parse_time;
 /// Tests that OffsetTime required breaks work correctly with flexible start times
 /// (shift.start.latest is None), verifying that departure rescheduling
 /// produces feasible solutions with breaks placed at the correct offset from the anchor.
-
 /// Collects all activity intervals (start, end, type, job_id) from a tour, flattened across stops.
 fn collect_activity_intervals(tour: &Tour) -> Vec<(f64, f64, String, String)> {
     let mut intervals = Vec::new();
@@ -485,7 +484,7 @@ fn can_assign_offset_break_with_first_job_span_and_range_offset() {
     let brk = intervals.iter().find(|(_, _, t, _)| t == "break").unwrap();
     let offset = brk.0 - first_route_job.0;
     assert!(
-        offset >= 6.0 && offset <= 14.0,
+        (6.0..=14.0).contains(&offset),
         "break offset from first job arrival ({}) should be in [7..12], got {offset} (break at {})",
         first_route_job.0,
         brk.0
@@ -1029,7 +1028,7 @@ fn can_assign_break_with_many_closely_spaced_jobs_and_long_service() {
     let brk = intervals.iter().find(|(_, _, t, _)| t == "break").unwrap();
     let offset = brk.0 - departure;
     assert!(
-        offset >= 9.0 && offset <= 18.0,
+        (9.0..=18.0).contains(&offset),
         "break offset from departure should be in [10..15] range, got {offset}\ntour: {}",
         format_tour_debug(tour)
     );
@@ -1184,7 +1183,7 @@ fn can_assign_break_with_multiple_vehicles() {
     let solution = solve_with_metaheuristic_and_iterations_without_check(problem, Some(vec![matrix]), 200);
 
     assert!(solution.unassigned.is_none(), "expected all 4 jobs assigned");
-    assert!(solution.tours.len() >= 1, "expected at least 1 tour");
+    assert!(!solution.tours.is_empty(), "expected at least 1 tour");
 
     // Validate each tour independently — break count/duration varies by vehicle type
     for tour in &solution.tours {
@@ -1289,7 +1288,7 @@ fn can_assign_break_with_first_job_span_flexible_departure_and_wide_offset() {
     let brk = intervals.iter().find(|(_, _, t, _)| t == "break").unwrap();
     let offset = brk.0 - first_route_job.0;
     assert!(
-        offset >= 3.0 && offset <= 12.0,
+        (3.0..=12.0).contains(&offset),
         "break offset from first job ({}) should be in [4..10], got {offset} (break at {})\ntour: {}",
         first_route_job.0,
         brk.0,
@@ -1507,7 +1506,7 @@ fn can_assign_exact_and_offset_breaks_with_many_jobs() {
     // Validate each break individually for duration
     for (b_start, b_end, _, _) in &breaks {
         let dur = b_end - b_start;
-        assert!(dur >= 1.5 && dur <= 3.5, "unexpected break duration {dur}\ntour: {}", format_tour_debug(tour));
+        assert!((1.5..=3.5).contains(&dur), "unexpected break duration {dur}\ntour: {}", format_tour_debug(tour));
     }
 
     // Full validation (uses the longer break's duration for the uniform check — skip that, check manually)

@@ -110,10 +110,11 @@ fn build_vehicle_shift_summary(
     requirements: &HashMap<String, MinShiftRequirement>,
 ) -> VehicleShiftInfo {
     let usage = routes.iter().fold(HashMap::new(), |mut used, route_ctx| {
-        if let Some(vehicle_id) = route_ctx.route().actor.vehicle.dimens.get_vehicle_id().cloned() {
-            if requirements.contains_key(&vehicle_id) && route_ctx.route().tour.has_jobs() {
-                *used.entry(vehicle_id).or_insert(0) += 1;
-            }
+        if let Some(vehicle_id) = route_ctx.route().actor.vehicle.dimens.get_vehicle_id().cloned()
+            && requirements.contains_key(&vehicle_id)
+            && route_ctx.route().tour.has_jobs()
+        {
+            *used.entry(vehicle_id).or_insert(0) += 1;
         }
 
         used

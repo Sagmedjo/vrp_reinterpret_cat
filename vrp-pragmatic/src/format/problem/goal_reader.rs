@@ -84,10 +84,10 @@ pub(super) fn create_goal_context(
         )?);
     }
 
-    if props.has_min_vehicle_shifts {
-        if let Some(feature) = get_min_vehicle_shifts_feature("min_vehicle_shifts", api_problem)? {
-            features.push(feature);
-        }
+    if props.has_min_vehicle_shifts
+        && let Some(feature) = get_min_vehicle_shifts_feature("min_vehicle_shifts", api_problem)?
+    {
+        features.push(feature);
     }
 
     GoalContextBuilder::with_features(&features)?.set_main_goal(goal_builder.build()?).build()

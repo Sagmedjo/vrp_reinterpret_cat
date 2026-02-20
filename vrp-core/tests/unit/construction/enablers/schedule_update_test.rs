@@ -417,7 +417,7 @@ fn is_schedule_feasible_returns_false_when_break_exceeds_activity_tw() {
 
     let acts = vec![ActivityBuilder::with_location_tw_and_duration(10, TimeWindow::new(0., 20.), 10.).build()];
     let route_ctx = RouteContextBuilder::default()
-        .with_route(RouteBuilder::default().with_vehicle(&fleet, "v1").add_activities(acts.into_iter()).build())
+        .with_route(RouteBuilder::default().with_vehicle(&fleet, "v1").add_activities(acts).build())
         .build();
 
     assert!(!is_schedule_feasible(route_ctx.route(), activity_cost.as_ref(), &transport));

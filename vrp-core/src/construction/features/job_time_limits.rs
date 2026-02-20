@@ -56,9 +56,7 @@ impl JobTimeLimitsConstraint {
         let target = activity_ctx.target;
 
         // Skip if target is not a job (e.g., it's a depot or break)
-        if target.job.is_none() {
-            return None;
-        }
+        target.job.as_ref()?;
 
         let departure = prev.schedule.departure;
         let arr_time_at_target = departure
@@ -88,7 +86,7 @@ impl JobTimeLimitsConstraint {
         // Check latest_last constraint: applies when this becomes the last job
         // (next is the end depot or None for open routes)
         if let Some(latest_last) = constraints.latest_last {
-            let is_last_job = activity_ctx.next.map_or(true, |next| next.job.is_none());
+            let is_last_job = activity_ctx.next.is_none_or(|next| next.job.is_none());
             if is_last_job {
                 // Calculate when we would depart from this job
                 let actual_arr_time = if let Some(earliest_first) = constraints.earliest_first {
